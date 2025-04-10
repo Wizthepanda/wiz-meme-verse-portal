@@ -23,14 +23,14 @@ const Dashboard = () => {
         {/* Dashboard grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left column */}
-          <div>
+          <div className="md:col-span-2">
             <MemeStats className="mb-6" />
-            <MemeQuests />
+            <WizGallery />
           </div>
           
-          {/* Right column (spans 2 columns) */}
-          <div className="md:col-span-2">
-            <WizGallery />
+          {/* Right column */}
+          <div>
+            <MemeQuests />
           </div>
         </div>
       </div>

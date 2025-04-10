@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { 
@@ -75,7 +74,7 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
       className
     )}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-2xl font-bubblegum text-wiz-purple">Wiz Content Gallery</CardTitle>
+        <CardTitle className="text-2xl font-bubblegum text-wiz-purple">Gallery</CardTitle>
         <div className="flex items-center space-x-2">
           <button 
             onClick={() => setLayout("grid")}

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useCallback } from "react";
 import TopBar from "@/components/dashboard/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
@@ -13,6 +13,7 @@ interface MemeQuestProps {
   isNew?: boolean;
   isHot?: boolean;
   completed?: boolean;
+  claimsLeft?: number;
   onClick?: () => void;
 }
 
@@ -23,8 +24,32 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
   isNew = false,
   isHot = false,
   completed = false,
+  claimsLeft,
   onClick,
 }) => {
+  // Play sound when starting or completing a quest
+  const playSound = (soundType: 'start' | 'complete') => {
+    const audio = new Audio();
+    audio.volume = 0.5;
+    
+    if (soundType === 'start') {
+      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/start-quest-sound.mp3';
+    } else {
+      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/complete-quest-sound.mp3';
+    }
+    
+    audio.play().catch(err => console.log('Audio playback error:', err));
+  };
+
+  const handleQuestAction = () => {
+    if (!completed && onClick) {
+      playSound('start');
+      onClick();
+    } else if (completed) {
+      playSound('complete');
+    }
+  };
+
   return (
     <div className={cn(
       "relative bg-white/90 rounded-lg p-4 border-2 border-wiz-lavender/30 mb-3 transform transition-all duration-300",
@@ -41,6 +66,11 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
         {isHot && (
           <span className="bg-wiz-coral text-white text-xs font-bold px-2 py-1 rounded-full">
             HOT 🔥
+          </span>
+        )}
+        {claimsLeft !== undefined && claimsLeft < 200 && (
+          <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+            {claimsLeft} left!
           </span>
         )}
       </div>
@@ -63,11 +93,18 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
             "w-full py-2 rounded-lg text-sm font-bold transition-all",
             completed
               ? "bg-green-100 text-green-700"
-              : "bg-wiz-mint/20 text-wiz-purple hover:bg-wiz-mint/40"
+              : claimsLeft === 0 
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-wiz-mint/20 text-wiz-purple hover:bg-wiz-mint/40"
           )}
-          onClick={onClick}
+          onClick={handleQuestAction}
+          disabled={claimsLeft === 0}
         >
-          {completed ? "Completed! 🎉" : "Start Quest"}
+          {completed 
+            ? "Completed! 🎉" 
+            : claimsLeft === 0 
+              ? "All claimed!" 
+              : "Start Quest"}
         </button>
       </div>
     </div>
@@ -77,13 +114,13 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
 const MagicMissions = () => {
   const { toast } = useToast();
   
-  const handleQuestClick = (title: string) => {
+  const handleQuestClick = useCallback((title: string) => {
     toast({
       title: "Quest Started! ✨",
       description: `You've started "${title}"! Complete it to earn Sparkles!`,
       variant: "default",
     });
-  };
+  }, [toast]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
@@ -113,6 +150,7 @@ const MagicMissions = () => {
                   description="Share your first meme to the Memeverse"
                   reward={10}
                   isNew
+                  claimsLeft={453}
                   onClick={() => handleQuestClick("First Meme Magic")}
                 />
                 <MemeQuest
@@ -120,18 +158,20 @@ const MagicMissions = () => {
                   description="Login to the Memeverse portal today"
                   reward={5}
                   completed
-                  onClick={() => handleQuestClick("Daily Login")}
+                  claimsLeft={0}
                 />
                 <MemeQuest
                   title="Engage with 3 Memes"
                   description="Like or comment on 3 memes today"
                   reward={15}
+                  claimsLeft={788}
                   onClick={() => handleQuestClick("Engage with 3 Memes")}
                 />
                 <MemeQuest
                   title="Share the WIZ"
                   description="Share a $WIZ meme on Twitter"
                   reward={20}
+                  claimsLeft={621}
                   onClick={() => handleQuestClick("Share the WIZ")}
                 />
               </div>
@@ -153,12 +193,14 @@ const MagicMissions = () => {
                   description="Retweet 5 $WIZ memes in one day"
                   reward={25}
                   isHot
+                  claimsLeft={121}
                   onClick={() => handleQuestClick("Retweet Rampage")}
                 />
                 <MemeQuest
                   title="Meme Comment Master"
                   description="Leave 10 comments on Memeverse posts"
                   reward={15}
+                  claimsLeft={788}
                   onClick={() => handleQuestClick("Meme Comment Master")}
                 />
                 <MemeQuest
@@ -166,12 +208,14 @@ const MagicMissions = () => {
                   description="Earn your first 100 Meme Sparkles"
                   reward={50}
                   isHot
+                  claimsLeft={652}
                   onClick={() => handleQuestClick("Sparkle Collector")}
                 />
                 <MemeQuest
                   title="Wizard's Apprentice"
                   description="Complete all daily quests for 3 days in a row"
                   reward={75}
+                  claimsLeft={912}
                   onClick={() => handleQuestClick("Wizard's Apprentice")}
                 />
               </div>
@@ -194,12 +238,14 @@ const MagicMissions = () => {
                 description="Create a meme that gets 100+ likes"
                 reward={200}
                 isHot
+                claimsLeft={352}
                 onClick={() => handleQuestClick("Meme Legend")}
               />
               <MemeQuest
                 title="WIZ Ambassador"
                 description="Refer 5 friends to join the Memeverse"
                 reward={150}
+                claimsLeft={467}
                 onClick={() => handleQuestClick("WIZ Ambassador")}
               />
               <MemeQuest
@@ -207,6 +253,7 @@ const MagicMissions = () => {
                 description="Have a meme featured in WIZ Picks"
                 reward={300}
                 isHot
+                claimsLeft={78}
                 onClick={() => handleQuestClick("Viral Sensation")}
               />
             </div>

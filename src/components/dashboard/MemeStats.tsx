@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { Trophy } from "lucide-react";
 
 interface MemeStatsProps {
   className?: string;
@@ -12,7 +13,22 @@ const MemeStats: React.FC<MemeStatsProps> = ({ className }) => {
       "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-wiz-lavender/30",
       className
     )}>
-      <h2 className="text-2xl font-bubblegum text-wiz-purple mb-4">Your Meme Journey</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bubblegum text-wiz-purple">Your Meme Journey</h2>
+        
+        {/* Leaderboard rank */}
+        <div className="flex items-center">
+          <div className="relative group">
+            <div className="flex items-center gap-1 bg-gradient-to-r from-wiz-purple/70 to-wiz-coral/70 text-white p-2 rounded-lg animate-pulse hover:animate-none hover:from-wiz-purple hover:to-wiz-coral transition-all">
+              <Trophy size={16} className="text-wiz-banana" />
+              <span className="font-bold">42</span>
+            </div>
+            <div className="absolute -bottom-10 right-0 bg-black/80 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              Your global rank
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Dynamic Rank */}
       <div className="flex items-center mb-6">
