@@ -19,6 +19,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
+import { playSoundEffect } from "@/utils/soundEffects";
 
 interface GalleryItemProps {
   imageUrl: string;
@@ -84,11 +85,21 @@ interface WizGalleryProps {
 const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   
+  // Handle tab change to play the mystic pop sound
+  const handleTabChange = () => {
+    playSoundEffect('tabChange');
+  };
+  
+  // Handle post action to play the scribble sound
+  const handlePostAction = () => {
+    playSoundEffect('post');
+  };
+  
   return (
     <div className={className}>
-      <Tabs defaultValue="trending" className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList className="bg-white/50">
+      <Tabs defaultValue="trending" className="w-full" onValueChange={() => handleTabChange()}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+          <TabsList className="bg-white/50 mb-2 sm:mb-0">
             <TabsTrigger value="trending" className="flex items-center gap-1 text-sm">
               <TrendingUp size={14} /> Trending
             </TabsTrigger>
@@ -171,7 +182,10 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
         </TabsContent>
         
         <div className="flex justify-center mt-6">
-          <button className="px-4 py-2 bg-gradient-to-r from-wiz-purple/70 to-wiz-coral/70 hover:from-wiz-purple hover:to-wiz-coral text-white rounded-full transition-colors text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+          <button 
+            className="px-4 py-2 bg-gradient-to-r from-wiz-purple/70 to-wiz-coral/70 hover:from-wiz-purple hover:to-wiz-coral text-white rounded-full transition-colors text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+            onClick={handlePostAction}
+          >
             Load More Memes
           </button>
         </div>

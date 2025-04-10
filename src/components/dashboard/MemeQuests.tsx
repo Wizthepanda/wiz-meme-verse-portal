@@ -3,6 +3,7 @@ import React, { useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Sparkles, Trophy, ExternalLink, Clock } from "lucide-react";
+import { playSoundEffect } from "@/utils/soundEffects";
 
 interface MemeQuestProps {
   title: string;
@@ -26,25 +27,12 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
   onQuestStart,
 }) => {
   // Play sound when starting or completing a quest
-  const playSound = (soundType: 'start' | 'complete') => {
-    const audio = new Audio();
-    audio.volume = 0.5;
-    
-    if (soundType === 'start') {
-      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/start-quest-sound.mp3';
-    } else {
-      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/complete-quest-sound.mp3';
-    }
-    
-    audio.play().catch(err => console.log('Audio playback error:', err));
-  };
-
   const handleQuestAction = () => {
     if (!completed) {
-      playSound('start');
+      playSoundEffect('complete');
       if (onQuestStart) onQuestStart();
     } else {
-      playSound('complete');
+      playSoundEffect('reward');
     }
   };
 
@@ -128,7 +116,7 @@ const MemeQuests: React.FC<MemeQuestsProps> = ({ className }) => {
   
   return (
     <div className={cn(
-      "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-wiz-lavender/30",
+      "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-wiz-lavender/30 hover:shadow-xl transition-all duration-300",
       className
     )}>
       <div className="flex items-center justify-between mb-4">

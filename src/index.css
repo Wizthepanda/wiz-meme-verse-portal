@@ -157,4 +157,54 @@
   .parallax-layer {
     will-change: transform;
   }
+  
+  /* Enhanced mobile responsiveness */
+  @media (max-width: 640px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+  
+  /* Improved animations */
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+  
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* New sparkle animation */
+  @keyframes sparkle {
+    0% {
+      opacity: 0;
+      transform: scale(0.8) rotate(-10deg);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8) rotate(-10deg);
+    }
+  }
 }
