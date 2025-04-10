@@ -1,13 +1,55 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Trophy, TrendingUp, ArrowUpRight, Zap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  fetchSparkleTransactions, 
+  getNextRankInfo, 
+  getRankDisplayName, 
+  getRankEmoji,
+  getTimeSince
+} from "@/services/sparkleService";
+import { playSoundEffect } from "@/utils/soundEffects";
 
 interface MemeStatsProps {
   className?: string;
 }
 
 const MemeStats: React.FC<MemeStatsProps> = ({ className }) => {
+  const { user, profile } = useAuth();
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTransactions = async () => {
+      if (user) {
+        try {
+          const data = await fetchSparkleTransactions(user.id, 3);
+          setTransactions(data);
+        } catch (error) {
+          console.error("Error loading transactions:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadTransactions();
+  }, [user]);
+
+  // Calculate XP progress
+  const nextRank = profile ? getNextRankInfo(profile.sparkles) : { name: "Sparkling Newbie", sparklesNeeded: 300, emoji: "✨" };
+  const currentSparkles = profile?.sparkles || 0;
+  const targetSparkles = currentSparkles + nextRank.sparklesNeeded;
+  const progressPercentage = targetSparkles > 0 
+    ? Math.min(Math.round((currentSparkles / targetSparkles) * 100), 100) 
+    : 0;
+
+  const handleXpClick = () => {
+    playSoundEffect('levelUp');
+  };
+
   return (
     <div className={cn(
       "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-wiz-lavender/30",
@@ -39,11 +81,15 @@ const MemeStats: React.FC<MemeStatsProps> = ({ className }) => {
         <div className="bg-gradient-to-br from-white to-wiz-lavender/10 p-4 rounded-lg border border-wiz-lavender/20 shadow-sm">
           <div className="flex items-center">
             <div className="w-16 h-16 bg-wiz-purple/20 rounded-full flex items-center justify-center mr-4 shadow-inner">
-              <span className="text-2xl">🐼</span>
+              <span className="text-2xl">{profile ? getRankEmoji(profile.rank) : "🐼"}</span>
             </div>
             <div>
-              <p className="text-lg font-bold text-wiz-dark">Cloud Lurker</p>
-              <p className="text-sm text-gray-600">Level 3 Memer</p>
+              <p className="text-lg font-bold text-wiz-dark">
+                {profile ? getRankDisplayName(profile.rank) : "Meme Peasant"}
+              </p>
+              <p className="text-sm text-gray-600">
+                Level {profile?.sparkles ? Math.floor(profile.sparkles / 100) : 0} Memer
+              </p>
               <div className="mt-1 flex items-center text-xs text-wiz-purple">
                 <ArrowUpRight size={12} className="mr-1" />
                 <span>Rising fast</span>
@@ -59,25 +105,27 @@ const MemeStats: React.FC<MemeStatsProps> = ({ className }) => {
             <Zap size={16} className="text-wiz-banana" />
             $WIZ Estimator
           </h3>
-          <p className="text-2xl font-bold">~42.69 $WIZ</p>
+          <p className="text-2xl font-bold">~{(profile?.sparkles || 0) / 10} $WIZ</p>
           <p className="text-sm text-gray-600">Based on your current activity</p>
         </div>
       </div>
       
       {/* XP Bar */}
-      <div className="mb-6 bg-white/70 p-4 rounded-lg border border-wiz-lavender/20 shadow-sm">
+      <div onClick={handleXpClick} className="mb-6 bg-white/70 p-4 rounded-lg border border-wiz-lavender/20 shadow-sm cursor-pointer">
         <div className="flex justify-between mb-1">
           <span className="text-sm text-gray-600">Meme XP</span>
-          <span className="text-sm font-bold text-wiz-purple">247/500</span>
+          <span className="text-sm font-bold text-wiz-purple">
+            {currentSparkles}/{targetSparkles}
+          </span>
         </div>
         <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-wiz-mint to-wiz-purple rounded-full"
-            style={{ width: "49%" }}
+            style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
         <div className="mt-1 text-xs text-gray-500 flex justify-end">
-          <span>253 XP to Level 4</span>
+          <span>{nextRank.sparklesNeeded} XP to {nextRank.name}</span>
         </div>
       </div>
       
@@ -88,30 +136,28 @@ const MemeStats: React.FC<MemeStatsProps> = ({ className }) => {
           Recent Sparkles
         </h3>
         <div className="space-y-2">
-          <div className="flex items-center p-3 bg-gradient-to-r from-wiz-banana/10 to-wiz-banana/20 rounded-lg border border-wiz-banana/20 transform transition-all hover:scale-102 hover:shadow-sm">
-            <span className="text-xl mr-2">✨</span>
-            <div>
-              <p className="text-sm font-bold">+10 Sparkles</p>
-              <p className="text-xs text-gray-600">Posted "When $WIZ pumps" meme</p>
+          {loading ? (
+            <div className="text-center py-4 text-gray-500">Loading your sparkle history...</div>
+          ) : transactions.length > 0 ? (
+            transactions.map((tx, index) => (
+              <div key={tx.id} className={`flex items-center p-3 bg-gradient-to-r rounded-lg border transform transition-all hover:scale-102 hover:shadow-sm
+                ${index % 3 === 0 ? 'from-wiz-banana/10 to-wiz-banana/20 border-wiz-banana/20' : 
+                 index % 3 === 1 ? 'from-wiz-coral/10 to-wiz-coral/20 border-wiz-coral/20' : 
+                 'from-wiz-mint/10 to-wiz-mint/20 border-wiz-mint/20'}`}
+              >
+                <span className="text-xl mr-2">✨</span>
+                <div>
+                  <p className="text-sm font-bold">{tx.amount > 0 ? `+${tx.amount}` : tx.amount} Sparkles</p>
+                  <p className="text-xs text-gray-600">{tx.description}</p>
+                </div>
+                <span className="ml-auto text-xs text-gray-500">{getTimeSince(tx.created_at)}</span>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              Complete missions to earn sparkles and view your history here!
             </div>
-            <span className="ml-auto text-xs text-gray-500">2h ago</span>
-          </div>
-          <div className="flex items-center p-3 bg-gradient-to-r from-wiz-coral/10 to-wiz-coral/20 rounded-lg border border-wiz-coral/20 transform transition-all hover:scale-102 hover:shadow-sm">
-            <span className="text-xl mr-2">✨</span>
-            <div>
-              <p className="text-sm font-bold">+5 Sparkles</p>
-              <p className="text-xs text-gray-600">Daily login bonus</p>
-            </div>
-            <span className="ml-auto text-xs text-gray-500">6h ago</span>
-          </div>
-          <div className="flex items-center p-3 bg-gradient-to-r from-wiz-mint/10 to-wiz-mint/20 rounded-lg border border-wiz-mint/20 transform transition-all hover:scale-102 hover:shadow-sm">
-            <span className="text-xl mr-2">✨</span>
-            <div>
-              <p className="text-sm font-bold">+25 Sparkles</p>
-              <p className="text-xs text-gray-600">Completed "Retweet Rampage" quest</p>
-            </div>
-            <span className="ml-auto text-xs text-gray-500">1d ago</span>
-          </div>
+          )}
         </div>
       </div>
     </div>

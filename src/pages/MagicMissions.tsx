@@ -1,52 +1,33 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import TopBar from "@/components/dashboard/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { completeMission, fetchMissions, Mission } from "@/services/sparkleService";
+import { playSoundEffect } from "@/utils/soundEffects";
+import { useNavigate } from "react-router-dom";
 
 interface MemeQuestProps {
-  title: string;
-  description: string;
-  reward: number;
-  isNew?: boolean;
-  isHot?: boolean;
+  mission: Mission;
   completed?: boolean;
-  claimsLeft?: number;
   onClick?: () => void;
 }
 
 const MemeQuest: React.FC<MemeQuestProps> = ({
-  title,
-  description,
-  reward,
-  isNew = false,
-  isHot = false,
+  mission,
   completed = false,
-  claimsLeft,
   onClick,
 }) => {
   // Play sound when starting or completing a quest
-  const playSound = (soundType: 'start' | 'complete') => {
-    const audio = new Audio();
-    audio.volume = 0.5;
-    
-    if (soundType === 'start') {
-      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/start-quest-sound.mp3';
-    } else {
-      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/complete-quest-sound.mp3';
-    }
-    
-    audio.play().catch(err => console.log('Audio playback error:', err));
-  };
-
   const handleQuestAction = () => {
     if (!completed && onClick) {
-      playSound('start');
+      playSoundEffect('complete');
       onClick();
     } else if (completed) {
-      playSound('complete');
+      playSoundEffect('reward');
     }
   };
 
@@ -58,51 +39,52 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
     )}>
       {/* Status badges */}
       <div className="absolute -top-2 left-2 flex space-x-2">
-        {isNew && (
+        {mission.is_new && (
           <span className="bg-wiz-purple text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
             NEW!
           </span>
         )}
-        {isHot && (
+        {mission.is_hot && (
           <span className="bg-wiz-coral text-white text-xs font-bold px-2 py-1 rounded-full">
             HOT 🔥
           </span>
         )}
-        {claimsLeft !== undefined && claimsLeft < 200 && (
-          <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-            {claimsLeft} left!
+        {mission.claims_left !== null && mission.claims_left < 200 && (
+          <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center">
+            <Clock size={12} className="mr-1" />
+            {mission.claims_left} left!
           </span>
         )}
       </div>
       
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="text-lg font-bold text-wiz-dark mb-1">{title}</h3>
-          <p className="text-sm text-gray-600 mb-2">{description}</p>
+          <h3 className="text-lg font-bold text-wiz-dark mb-1">{mission.title}</h3>
+          <p className="text-sm text-gray-600 mb-2">{mission.description}</p>
         </div>
         <div className="flex items-center space-x-1 bg-wiz-banana/30 px-2 py-1 rounded-lg">
           <span className="text-sm">✨</span>
-          <span className="text-sm font-bold">{reward}</span>
+          <span className="text-sm font-bold">{mission.reward}</span>
         </div>
       </div>
       
-      {/* Completion checkbox */}
+      {/* Completion button */}
       <div className="mt-2">
         <button 
           className={cn(
             "w-full py-2 rounded-lg text-sm font-bold transition-all",
             completed
               ? "bg-green-100 text-green-700"
-              : claimsLeft === 0 
+              : mission.claims_left === 0 
                 ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                 : "bg-wiz-mint/20 text-wiz-purple hover:bg-wiz-mint/40"
           )}
           onClick={handleQuestAction}
-          disabled={claimsLeft === 0}
+          disabled={mission.claims_left === 0 || completed}
         >
           {completed 
             ? "Completed! 🎉" 
-            : claimsLeft === 0 
+            : mission.claims_left === 0 
               ? "All claimed!" 
               : "Start Quest"}
         </button>
@@ -113,14 +95,106 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
 
 const MagicMissions = () => {
   const { toast } = useToast();
+  const { user, profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const [dailyMissions, setDailyMissions] = useState<Mission[]>([]);
+  const [weeklyMissions, setWeeklyMissions] = useState<Mission[]>([]);
+  const [specialMissions, setSpecialMissions] = useState<Mission[]>([]);
+  const [completedMissionIds, setCompletedMissionIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  const handleQuestClick = useCallback((title: string) => {
-    toast({
-      title: "Quest Started! ✨",
-      description: `You've started "${title}"! Complete it to earn Sparkles!`,
-      variant: "default",
-    });
-  }, [toast]);
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+  
+  // Fetch missions
+  useEffect(() => {
+    const loadMissions = async () => {
+      if (user) {
+        try {
+          setLoading(true);
+          
+          // Fetch missions by type
+          const [daily, weekly, special] = await Promise.all([
+            fetchMissions('daily'),
+            fetchMissions('weekly'),
+            fetchMissions('special')
+          ]);
+          
+          setDailyMissions(daily);
+          setWeeklyMissions(weekly);
+          setSpecialMissions(special);
+          
+          // Fetch completed missions
+          const { data } = await supabase
+            .from('completed_missions')
+            .select('mission_id')
+            .eq('user_id', user.id);
+          
+          if (data) {
+            setCompletedMissionIds(data.map(cm => cm.mission_id));
+          }
+        } catch (error) {
+          console.error("Error loading missions:", error);
+          toast({
+            title: "Failed to load missions",
+            description: "Please try again later",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadMissions();
+  }, [user, toast]);
+  
+  const handleQuestClick = useCallback(async (mission: Mission) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    
+    try {
+      const success = await completeMission(mission.id, user.id);
+      
+      if (success) {
+        // Update local state
+        setCompletedMissionIds(prev => [...prev, mission.id]);
+        
+        // Refresh user profile to get updated sparkles
+        await refreshProfile();
+        
+        toast({
+          title: "Quest Completed! ✨",
+          description: `You've earned ${mission.reward} Sparkles for completing "${mission.title}"!`,
+          variant: "default",
+        });
+        
+        playSoundEffect('reward');
+      } else {
+        toast({
+          title: "Couldn't complete quest",
+          description: "This quest may have been completed already or is no longer available.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error completing mission:", error);
+      toast({
+        title: "Error",
+        description: "Failed to complete mission. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [user, navigate, toast, refreshProfile]);
+
+  // Import supabase
+  const { supabase } = require("@/integrations/supabase/client");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
@@ -134,131 +208,102 @@ const MagicMissions = () => {
           <p className="text-gray-600">Complete quests to earn Sparkles and level up!</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Daily Quests */}
-          <Card className="bg-white/80 backdrop-blur-sm border-wiz-lavender/30">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl font-bubblegum text-wiz-purple">Daily Missions</span>
-                <Sparkles className="text-wiz-purple" size={20} />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
-                <MemeQuest
-                  title="First Meme Magic"
-                  description="Share your first meme to the Memeverse"
-                  reward={10}
-                  isNew
-                  claimsLeft={453}
-                  onClick={() => handleQuestClick("First Meme Magic")}
-                />
-                <MemeQuest
-                  title="Daily Login"
-                  description="Login to the Memeverse portal today"
-                  reward={5}
-                  completed
-                  claimsLeft={0}
-                />
-                <MemeQuest
-                  title="Engage with 3 Memes"
-                  description="Like or comment on 3 memes today"
-                  reward={15}
-                  claimsLeft={788}
-                  onClick={() => handleQuestClick("Engage with 3 Memes")}
-                />
-                <MemeQuest
-                  title="Share the WIZ"
-                  description="Share a $WIZ meme on Twitter"
-                  reward={20}
-                  claimsLeft={621}
-                  onClick={() => handleQuestClick("Share the WIZ")}
-                />
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Weekly Quests */}
-          <Card className="bg-white/80 backdrop-blur-sm border-wiz-lavender/30">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl font-bubblegum text-wiz-purple">Weekly Missions</span>
-                <Sparkles className="text-wiz-purple" size={20} />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
-                <MemeQuest
-                  title="Retweet Rampage"
-                  description="Retweet 5 $WIZ memes in one day"
-                  reward={25}
-                  isHot
-                  claimsLeft={121}
-                  onClick={() => handleQuestClick("Retweet Rampage")}
-                />
-                <MemeQuest
-                  title="Meme Comment Master"
-                  description="Leave 10 comments on Memeverse posts"
-                  reward={15}
-                  claimsLeft={788}
-                  onClick={() => handleQuestClick("Meme Comment Master")}
-                />
-                <MemeQuest
-                  title="Sparkle Collector"
-                  description="Earn your first 100 Meme Sparkles"
-                  reward={50}
-                  isHot
-                  claimsLeft={652}
-                  onClick={() => handleQuestClick("Sparkle Collector")}
-                />
-                <MemeQuest
-                  title="Wizard's Apprentice"
-                  description="Complete all daily quests for 3 days in a row"
-                  reward={75}
-                  claimsLeft={912}
-                  onClick={() => handleQuestClick("Wizard's Apprentice")}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="text-wiz-purple animate-pulse font-bold flex items-center">
+              <Sparkles className="mr-2" />
+              Loading Magic Missions...
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Daily Quests */}
+            <Card className="bg-white/80 backdrop-blur-sm border-wiz-lavender/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-2xl font-bubblegum text-wiz-purple">Daily Missions</span>
+                  <Sparkles className="text-wiz-purple" size={20} />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
+                  {dailyMissions.length > 0 ? (
+                    dailyMissions.map(mission => (
+                      <MemeQuest
+                        key={mission.id}
+                        mission={mission}
+                        completed={completedMissionIds.includes(mission.id)}
+                        onClick={() => handleQuestClick(mission)}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No daily missions available right now. Check back soon!
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Weekly Quests */}
+            <Card className="bg-white/80 backdrop-blur-sm border-wiz-lavender/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-2xl font-bubblegum text-wiz-purple">Weekly Missions</span>
+                  <Sparkles className="text-wiz-purple" size={20} />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
+                  {weeklyMissions.length > 0 ? (
+                    weeklyMissions.map(mission => (
+                      <MemeQuest
+                        key={mission.id}
+                        mission={mission}
+                        completed={completedMissionIds.includes(mission.id)}
+                        onClick={() => handleQuestClick(mission)}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No weekly missions available right now. Check back soon!
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
         
         {/* Special Quests */}
-        <Card className="bg-white/80 backdrop-blur-sm border-wiz-lavender/30 mt-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <span className="text-2xl font-bubblegum text-wiz-purple">Special Missions</span>
-              <span className="text-xl">🌟</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
-              <MemeQuest
-                title="Meme Legend"
-                description="Create a meme that gets 100+ likes"
-                reward={200}
-                isHot
-                claimsLeft={352}
-                onClick={() => handleQuestClick("Meme Legend")}
-              />
-              <MemeQuest
-                title="WIZ Ambassador"
-                description="Refer 5 friends to join the Memeverse"
-                reward={150}
-                claimsLeft={467}
-                onClick={() => handleQuestClick("WIZ Ambassador")}
-              />
-              <MemeQuest
-                title="Viral Sensation"
-                description="Have a meme featured in WIZ Picks"
-                reward={300}
-                isHot
-                claimsLeft={78}
-                onClick={() => handleQuestClick("Viral Sensation")}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {!loading && (
+          <Card className="bg-white/80 backdrop-blur-sm border-wiz-lavender/30 mt-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-2xl font-bubblegum text-wiz-purple">Special Missions</span>
+                <span className="text-xl">🌟</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
+                {specialMissions.length > 0 ? (
+                  specialMissions.map(mission => (
+                    <MemeQuest
+                      key={mission.id}
+                      mission={mission}
+                      completed={completedMissionIds.includes(mission.id)}
+                      onClick={() => handleQuestClick(mission)}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    No special missions available right now. Special missions appear randomly!
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Home, Laugh, Sparkles, Trophy, LogOut } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Home, Laugh, Sparkles, Trophy, LogOut, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { getRankDisplayName } from "@/services/sparkleService";
 
 interface TopBarProps {
   className?: string;
@@ -11,13 +13,25 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ className }) => {
   const { toast } = useToast();
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    toast({
-      title: "Logged out successfully",
-      description: "See you soon, meme lord!",
-      variant: "default",
-    });
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out successfully",
+        description: "See you soon, meme lord!",
+        variant: "default",
+      });
+      navigate("/auth");
+    } catch (error: any) {
+      toast({
+        title: "Logout failed",
+        description: error.message || "An error occurred during logout",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -33,19 +47,27 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
           <span className="text-xl">🐦</span>
         </div>
         <div>
-          <p className="font-medium text-wiz-dark">@wizuser</p>
-          <div className="flex items-center">
-            <span className="text-xs bg-wiz-mint/30 text-wiz-purple px-2 py-0.5 rounded-full">
-              Cloud Lurker
-            </span>
-          </div>
+          <p className="font-medium text-wiz-dark">
+            {user ? (profile?.username || "@wizuser") : (
+              <Link to="/auth" className="text-wiz-purple hover:underline flex items-center">
+                <User size={14} className="mr-1" /> Sign In
+              </Link>
+            )}
+          </p>
+          {profile && (
+            <div className="flex items-center">
+              <span className="text-xs bg-wiz-mint/30 text-wiz-purple px-2 py-0.5 rounded-full">
+                {getRankDisplayName(profile.rank)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
       
       {/* Center - Sparkles counter */}
       <div className="flex items-center space-x-2 bg-wiz-banana/20 px-4 py-2 rounded-full hover:bg-wiz-banana/30 transition-all cursor-pointer">
         <span className="text-xl animate-pulse">✨</span>
-        <span className="font-bubblegum text-xl text-wiz-purple">247</span>
+        <span className="font-bubblegum text-xl text-wiz-purple">{profile?.sparkles || 0}</span>
       </div>
       
       {/* Right - Navigation */}
@@ -62,12 +84,14 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
         <Link to="/leaderboard" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
           <Trophy size={20} />
         </Link>
-        <button 
-          onClick={handleLogout}
-          className="p-2 rounded-full bg-wiz-coral/10 text-wiz-coral hover:bg-wiz-coral/20 transition-all"
-        >
-          <LogOut size={20} />
-        </button>
+        {user && (
+          <button 
+            onClick={handleLogout}
+            className="p-2 rounded-full bg-wiz-coral/10 text-wiz-coral hover:bg-wiz-coral/20 transition-all"
+          >
+            <LogOut size={20} />
+          </button>
+        )}
       </div>
     </div>
   );

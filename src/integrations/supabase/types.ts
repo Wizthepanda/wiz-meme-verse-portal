@@ -9,16 +9,175 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      completed_missions: {
+        Row: {
+          completed_at: string
+          id: string
+          mission_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          mission_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          mission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "completed_missions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          active: boolean | null
+          claims_left: number | null
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          is_hot: boolean | null
+          is_new: boolean | null
+          max_participants: number | null
+          reward: number
+          title: string
+          type: Database["public"]["Enums"]["mission_type"]
+        }
+        Insert: {
+          active?: boolean | null
+          claims_left?: number | null
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          is_hot?: boolean | null
+          is_new?: boolean | null
+          max_participants?: number | null
+          reward: number
+          title: string
+          type: Database["public"]["Enums"]["mission_type"]
+        }
+        Update: {
+          active?: boolean | null
+          claims_left?: number | null
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          is_hot?: boolean | null
+          is_new?: boolean | null
+          max_participants?: number | null
+          reward?: number
+          title?: string
+          type?: Database["public"]["Enums"]["mission_type"]
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          rank: Database["public"]["Enums"]["user_rank"]
+          sparkles: number
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          rank?: Database["public"]["Enums"]["user_rank"]
+          sparkles?: number
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rank?: Database["public"]["Enums"]["user_rank"]
+          sparkles?: number
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      sparkle_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          mission_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          id?: string
+          mission_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          mission_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sparkle_transactions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sparkle_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      complete_mission: {
+        Args: { mission_id: string; user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      mission_type: "daily" | "weekly" | "special"
+      user_rank:
+        | "meme_peasant"
+        | "sparkling_newbie"
+        | "potion_poster"
+        | "chaos_slinger"
+        | "meme_lord"
+        | "cloud_sorcerer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +292,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      mission_type: ["daily", "weekly", "special"],
+      user_rank: [
+        "meme_peasant",
+        "sparkling_newbie",
+        "potion_poster",
+        "chaos_slinger",
+        "meme_lord",
+        "cloud_sorcerer",
+      ],
+    },
   },
 } as const
