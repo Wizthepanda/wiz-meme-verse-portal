@@ -2,6 +2,7 @@
 import React, { useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { Sparkles, Trophy, ExternalLink, Clock } from "lucide-react";
 
 interface MemeQuestProps {
   title: string;
@@ -49,9 +50,10 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
 
   return (
     <div className={cn(
-      "relative bg-white/90 rounded-lg p-4 border-2 border-wiz-lavender/30 mb-3 transform transition-all duration-300",
-      "hover:shadow-md hover:-translate-y-1",
-      completed ? "opacity-60" : ""
+      "relative bg-white/90 rounded-lg p-4 border-2 shadow-sm transition-all duration-300",
+      "hover:shadow-md hover:-translate-y-0.5",
+      completed ? "border-green-300/50 bg-green-50/50" : isHot ? "border-wiz-coral/30 bg-gradient-to-br from-white to-wiz-coral/10" : "border-wiz-lavender/30",
+      "mb-3 last:mb-0"
     )}>
       {/* Status badges */}
       <div className="absolute -top-2 left-2 flex space-x-2">
@@ -66,19 +68,20 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
           </span>
         )}
         {claimsLeft !== undefined && claimsLeft < 200 && (
-          <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+          <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center">
+            <Clock size={12} className="mr-1" />
             {claimsLeft} left!
           </span>
         )}
       </div>
       
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start mt-1">
         <div>
           <h3 className="text-lg font-bold text-wiz-dark mb-1">{title}</h3>
           <p className="text-sm text-gray-600 mb-2">{description}</p>
         </div>
         <div className="flex items-center space-x-1 bg-wiz-banana/30 px-2 py-1 rounded-lg">
-          <span className="text-sm">✨</span>
+          <Sparkles size={14} className="text-wiz-purple" />
           <span className="text-sm font-bold">{reward}</span>
         </div>
       </div>
@@ -89,10 +92,10 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
           className={cn(
             "w-full py-2 rounded-lg text-sm font-bold transition-all",
             completed
-              ? "bg-green-100 text-green-700"
+              ? "bg-green-100 text-green-700 flex items-center justify-center"
               : claimsLeft === 0 
                 ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-wiz-mint/20 text-wiz-purple hover:bg-wiz-mint/40"
+                : "bg-gradient-to-r from-wiz-purple/60 to-wiz-coral/60 text-white hover:from-wiz-purple hover:to-wiz-coral"
           )}
           onClick={handleQuestAction}
           disabled={claimsLeft === 0}
@@ -126,12 +129,20 @@ const MemeQuests: React.FC<MemeQuestsProps> = ({ className }) => {
   return (
     <div className={cn(
       "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-wiz-lavender/30",
-      "scrollbar-thin scrollbar-thumb-wiz-purple/20 scrollbar-track-transparent",
       className
     )}>
-      <h2 className="text-2xl font-bubblegum text-wiz-purple mb-4">Magic Missions</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bubblegum text-wiz-purple flex items-center gap-2">
+          <Trophy className="text-wiz-banana" size={20} />
+          Magic Missions
+        </h2>
+        <button className="flex items-center text-xs gap-1 bg-wiz-purple/10 px-2 py-1 rounded-full text-wiz-purple hover:bg-wiz-purple/20 transition-colors">
+          <span>View All</span>
+          <ExternalLink size={12} />
+        </button>
+      </div>
       
-      <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
+      <div className="space-y-1 max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-wiz-purple/20 scrollbar-track-transparent">
         <MemeQuest
           title="First Meme Magic"
           description="Share your first meme to the Memeverse"
@@ -176,6 +187,15 @@ const MemeQuests: React.FC<MemeQuestsProps> = ({ className }) => {
           reward={75}
           claimsLeft={912}
           onQuestStart={() => handleQuestStart("Wizard's Apprentice")}
+        />
+        <MemeQuest
+          title="Meme Lord Rising"
+          description="Create 5 original memes that get >50 likes each"
+          reward={100}
+          isNew
+          isHot
+          claimsLeft={300}
+          onQuestStart={() => handleQuestStart("Meme Lord Rising")}
         />
       </div>
     </div>
