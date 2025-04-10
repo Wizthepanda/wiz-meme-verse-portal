@@ -19,6 +19,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
+import { playSound } from "@/utils/soundEffects";
 
 interface GalleryItemProps {
   imageUrl: string;
@@ -50,7 +51,7 @@ const GalleryItem: React.FC<GalleryItemProps> = ({
         {/* Premium indicator */}
         {isPremium && (
           <div className="absolute top-2 right-2 z-10">
-            <Star size={16} className="fill-wiz-banana text-wiz-banana" />
+            <Star size={16} className="fill-wiz-banana text-wiz-banana animate-pulse" />
           </div>
         )}
         
@@ -84,25 +85,48 @@ interface WizGalleryProps {
 const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   
+  // Play tab click sound
+  const handleTabClick = () => {
+    playSound('tabClick', 0.3);
+  };
+
+  // Play layout toggle sound
+  const handleLayoutChange = (newLayout: "grid" | "list") => {
+    playSound('tabClick', 0.2);
+    setLayout(newLayout);
+  };
+  
   return (
     <div className={className}>
       <Tabs defaultValue="trending" className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList className="bg-white/50">
-            <TabsTrigger value="trending" className="flex items-center gap-1 text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <TabsList className="bg-white/50 h-auto p-1">
+            <TabsTrigger 
+              value="trending" 
+              className="flex items-center gap-1 text-xs sm:text-sm h-8"
+              onClick={handleTabClick}
+            >
               <TrendingUp size={14} /> Trending
             </TabsTrigger>
-            <TabsTrigger value="latest" className="flex items-center gap-1 text-sm">
+            <TabsTrigger 
+              value="latest" 
+              className="flex items-center gap-1 text-xs sm:text-sm h-8"
+              onClick={handleTabClick}
+            >
               <Clock size={14} /> Latest
             </TabsTrigger>
-            <TabsTrigger value="picks" className="flex items-center gap-1 text-sm">
+            <TabsTrigger 
+              value="picks" 
+              className="flex items-center gap-1 text-xs sm:text-sm h-8"
+              onClick={handleTabClick}
+            >
               <Star size={14} /> WIZ Picks
             </TabsTrigger>
           </TabsList>
           
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => setLayout("grid")}
+              onClick={() => handleLayoutChange("grid")}
               className={cn(
                 "p-1.5 rounded-md transition-colors",
                 layout === "grid" ? "bg-wiz-purple/20 text-wiz-purple" : "text-gray-400 hover:text-gray-600"
@@ -111,7 +135,7 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
               <Grid3X3 size={18} />
             </button>
             <button 
-              onClick={() => setLayout("list")}
+              onClick={() => handleLayoutChange("list")}
               className={cn(
                 "p-1.5 rounded-md transition-colors", 
                 layout === "list" ? "bg-wiz-purple/20 text-wiz-purple" : "text-gray-400 hover:text-gray-600"
@@ -119,7 +143,10 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
             >
               <GridIcon size={18} />
             </button>
-            <button className="flex items-center space-x-1 text-sm text-gray-600 px-3 py-1.5 rounded-md bg-white/50 hover:bg-white/80 transition-colors">
+            <button 
+              className="flex items-center space-x-1 text-xs sm:text-sm text-gray-600 px-2 sm:px-3 py-1.5 rounded-md bg-white/50 hover:bg-white/80 transition-colors"
+              onClick={() => playSound('tabClick', 0.2)}
+            >
               <Filter size={14} />
               <span>Filter</span>
             </button>
@@ -128,7 +155,7 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
         
         <TabsContent value="trending">
           <div className={cn(
-            "gap-4",
+            "gap-3 sm:gap-4",
             layout === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "space-y-4"
           )}>
             <GalleryItem imageUrl="🌊" title="Wave Wizards" likes={128} comments={32} isHot={true} />
@@ -146,7 +173,7 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
         
         <TabsContent value="latest">
           <div className={cn(
-            "gap-4",
+            "gap-3 sm:gap-4",
             layout === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "space-y-4"
           )}>
             <GalleryItem imageUrl="🌈" title="Rainbow Wizdom" likes={42} comments={8} isPremium={true} />
@@ -159,7 +186,7 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
         
         <TabsContent value="picks">
           <div className={cn(
-            "gap-4",
+            "gap-3 sm:gap-4",
             layout === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "space-y-4"
           )}>
             <GalleryItem imageUrl="⭐" title="Star Performer" likes={512} comments={128} isPremium={true} />
@@ -171,7 +198,10 @@ const WizGallery: React.FC<WizGalleryProps> = ({ className }) => {
         </TabsContent>
         
         <div className="flex justify-center mt-6">
-          <button className="px-4 py-2 bg-gradient-to-r from-wiz-purple/70 to-wiz-coral/70 hover:from-wiz-purple hover:to-wiz-coral text-white rounded-full transition-colors text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
+          <button 
+            className="px-4 py-2 bg-gradient-to-r from-wiz-purple/70 to-wiz-coral/70 hover:from-wiz-purple hover:to-wiz-coral text-white rounded-full transition-colors text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+            onClick={() => playSound('memePost', 0.3)}
+          >
             Load More Memes
           </button>
         </div>

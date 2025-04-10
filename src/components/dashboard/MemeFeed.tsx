@@ -1,7 +1,8 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Heart, MessageCircle, Repeat, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Repeat, Share2, TrendingUp, Clock, Star } from "lucide-react";
+import { playSound } from "@/utils/soundEffects";
 
 interface MemePostProps {
   username: string;
@@ -58,7 +59,10 @@ const MemePost: React.FC<MemePostProps> = ({
           <Repeat size={16} />
           <span>{reposts}</span>
         </button>
-        <button className="flex items-center space-x-1 hover:text-wiz-banana transition-colors">
+        <button 
+          className="flex items-center space-x-1 hover:text-wiz-banana transition-colors"
+          onClick={() => playSound('memePost', 0.3)}
+        >
           <Share2 size={16} />
         </button>
       </div>
@@ -71,28 +75,42 @@ interface MemeFeedProps {
 }
 
 const MemeFeed: React.FC<MemeFeedProps> = ({ className }) => {
+  // Handle tab click with sound effect
+  const handleTabClick = () => {
+    playSound('tabClick', 0.3);
+  };
+
   return (
     <div className={cn(
-      "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-wiz-lavender/30",
+      "bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-wiz-lavender/30",
       className
     )}>
-      <h2 className="text-2xl font-bubblegum text-wiz-purple mb-4">Live Chaos</h2>
+      <h2 className="text-xl sm:text-2xl font-bubblegum text-wiz-purple mb-4">Magic Mission</h2>
       
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6">
-        <button className="px-4 py-2 border-b-2 border-wiz-purple text-wiz-purple font-medium text-sm">
+      <div className="flex border-b border-gray-200 mb-4 sm:mb-6 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+        <button 
+          onClick={handleTabClick}
+          className="px-3 sm:px-4 py-2 border-b-2 border-wiz-purple text-wiz-purple font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
+        >
           🔥 Trending
         </button>
-        <button className="px-4 py-2 text-gray-500 font-medium text-sm">
+        <button 
+          onClick={handleTabClick}
+          className="px-3 sm:px-4 py-2 text-gray-500 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 hover:text-gray-700 transition-colors"
+        >
           ✨ Latest
         </button>
-        <button className="px-4 py-2 text-gray-500 font-medium text-sm">
+        <button 
+          onClick={handleTabClick}
+          className="px-3 sm:px-4 py-2 text-gray-500 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 hover:text-gray-700 transition-colors"
+        >
           🐼 WIZ Picks
         </button>
       </div>
       
       {/* Meme Feed */}
-      <div className="max-h-[500px] overflow-y-auto pr-2">
+      <div className="max-h-[500px] overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-wiz-purple/20 scrollbar-track-transparent">
         <MemePost
           username="@doge_lover"
           content="When the market dips but you're still HODLing $WIZ"
