@@ -1,7 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Home, Laugh, Magic, Trophy, LogOut } from "lucide-react";
+import { Home, Laugh, Sparkles, Trophy, LogOut } from "lucide-react";
 
 interface TopBarProps {
   className?: string;
@@ -45,7 +45,7 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
           <Laugh size={20} />
         </button>
         <button className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
-          <Magic size={20} />
+          <Sparkles size={20} />
         </button>
         <button className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
           <Trophy size={20} />

@@ -21,7 +21,7 @@ const Index = () => {
     // Navigate after animation completes
     setTimeout(() => {
       navigate("/dashboard");
-    }, a1000);
+    }, 1000);
   };
   
   return (
