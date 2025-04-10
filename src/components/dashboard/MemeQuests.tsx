@@ -3,7 +3,6 @@ import React, { useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Sparkles, Trophy, ExternalLink, Clock } from "lucide-react";
-import { playSound } from "@/utils/soundEffects";
 
 interface MemeQuestProps {
   title: string;
@@ -27,19 +26,25 @@ const MemeQuest: React.FC<MemeQuestProps> = ({
   onQuestStart,
 }) => {
   // Play sound when starting or completing a quest
+  const playSound = (soundType: 'start' | 'complete') => {
+    const audio = new Audio();
+    audio.volume = 0.5;
+    
+    if (soundType === 'start') {
+      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/start-quest-sound.mp3';
+    } else {
+      audio.src = 'https://assets.mixkit.co/active_storage/sfx/2022/complete-quest-sound.mp3';
+    }
+    
+    audio.play().catch(err => console.log('Audio playback error:', err));
+  };
+
   const handleQuestAction = () => {
     if (!completed) {
-      // Play start quest sound
-      playSound('startQuest', 0.4);
+      playSound('start');
       if (onQuestStart) onQuestStart();
     } else {
-      // Play completion sound
-      playSound('missionComplete', 0.4);
-      
-      // Show reward animation
-      setTimeout(() => {
-        playSound('wizReward', 0.3);
-      }, 500);
+      playSound('complete');
     }
   };
 
@@ -123,15 +128,15 @@ const MemeQuests: React.FC<MemeQuestsProps> = ({ className }) => {
   
   return (
     <div className={cn(
-      "bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-wiz-lavender/30",
+      "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-wiz-lavender/30",
       className
     )}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl sm:text-2xl font-bubblegum text-wiz-purple flex items-center gap-2">
+        <h2 className="text-2xl font-bubblegum text-wiz-purple flex items-center gap-2">
           <Trophy className="text-wiz-banana" size={20} />
           Magic Missions
         </h2>
-        <button className="flex items-center text-xs gap-1 bg-wiz-purple/10 px-2 py-1 rounded-full text-wiz-purple hover:bg-wiz-purple/20 transition-colors border border-wiz-purple/20">
+        <button className="flex items-center text-xs gap-1 bg-wiz-purple/10 px-2 py-1 rounded-full text-wiz-purple hover:bg-wiz-purple/20 transition-colors">
           <span>View All</span>
           <ExternalLink size={12} />
         </button>
