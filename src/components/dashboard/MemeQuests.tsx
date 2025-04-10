@@ -7,6 +7,7 @@ import { playSoundEffect } from "@/utils/soundEffects";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { completeMission, fetchMissions, Mission } from "@/services/sparkleService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MemeQuestProps {
   mission: Mission;
@@ -181,9 +182,6 @@ const MemeQuests: React.FC<MemeQuestsProps> = ({ className }) => {
       });
     }
   }, [user, profile, toast, refreshProfile]);
-
-  // Import supabase
-  const { supabase } = require("@/integrations/supabase/client");
   
   return (
     <div className={cn(

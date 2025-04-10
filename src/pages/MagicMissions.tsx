@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { completeMission, fetchMissions, Mission } from "@/services/sparkleService";
 import { playSoundEffect } from "@/utils/soundEffects";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MemeQuestProps {
   mission: Mission;
@@ -192,9 +193,6 @@ const MagicMissions = () => {
       });
     }
   }, [user, navigate, toast, refreshProfile]);
-
-  // Import supabase
-  const { supabase } = require("@/integrations/supabase/client");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
