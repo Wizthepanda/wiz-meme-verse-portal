@@ -23,10 +23,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Fetch user profile when user changes
   const fetchProfile = async (userId: string) => {
-    console.log("Fetching profile for user:", userId);
     try {
       const userProfile = await fetchUserProfile(userId);
-      console.log("User profile fetched:", userProfile);
       setProfile(userProfile);
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -36,7 +34,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Refresh user profile
   const refreshProfile = async () => {
     if (user?.id) {
-      console.log("Refreshing profile for user:", user.id);
       await fetchProfile(user.id);
     }
   };
@@ -49,23 +46,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(true);
       
       try {
-        console.log("Initializing auth state...");
-        
         // Listen for auth state changes first
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
-            console.log("Session from event:", newSession);
             
             if (mounted) {
               setSession(newSession);
               setUser(newSession?.user ?? null);
               
               if (newSession?.user) {
-                console.log("User from auth change:", newSession.user);
-                console.log("User metadata:", newSession.user.user_metadata);
-                console.log("User identities:", newSession.user.identities);
-                
+                console.log("Full user object:", newSession.user);
                 // Use setTimeout to prevent potential circular calls
                 setTimeout(() => {
                   fetchProfile(newSession.user.id);
@@ -79,17 +70,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // Then check for existing session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Current session check:", currentSession?.user?.id);
-        console.log("Full session object:", currentSession);
+        console.log("Current session:", currentSession?.user?.id);
         
         if (currentSession && mounted) {
           setSession(currentSession);
           setUser(currentSession.user);
           
           if (currentSession.user) {
-            console.log("Full user object from session:", currentSession.user);
-            console.log("User metadata from session:", currentSession.user.user_metadata);
-            console.log("User identities from session:", currentSession.user.identities);
+            console.log("User from session:", currentSession.user);
             fetchProfile(currentSession.user.id);
           }
         }
@@ -121,24 +109,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      setUser(null);
-      setSession(null);
-      setProfile(null);
     } catch (error) {
       console.error("Sign out error:", error);
       throw error;
     }
   };
-
-  // Debug current state
-  useEffect(() => {
-    console.log("AuthContext current state:", {
-      user: user ? { id: user.id, email: user.email } : null,
-      hasSession: !!session,
-      profile: profile ? { id: profile.id, username: profile.username } : null,
-      isLoading
-    });
-  }, [user, session, profile, isLoading]);
 
   return (
     <AuthContext.Provider value={{

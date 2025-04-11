@@ -30,13 +30,6 @@
     }
   }
   
-  /* Medium screens optimization */
-  @media (min-width: 641px) and (max-width: 1023px) {
-    .container {
-      max-width: 100%;
-    }
-  }
-  
   /* Additional mobile improvements */
   @media (max-width: 768px) {
     .scrollbar-thin {
@@ -54,29 +47,6 @@
     .scrollbar-thin::-webkit-scrollbar-thumb {
       background-color: rgba(155, 101, 222, 0.2);
       border-radius: 20px;
-    }
-    
-    /* Better spacing for mobile cards */
-    .card-grid-item {
-      margin-bottom: 0.75rem;
-    }
-    
-    /* Better paddings on mobile */
-    .mobile-condensed {
-      padding: 0.75rem !important;
-    }
-    
-    /* More touch-friendly buttons */
-    button, a {
-      min-height: 44px;
-      min-width: 44px;
-    }
-  }
-  
-  /* Improved dashboard grid for different screen sizes */
-  @media (min-width: 1024px) and (max-width: 1279px) {
-    .container {
-      max-width: 1024px;
     }
   }
 }

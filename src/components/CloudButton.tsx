@@ -6,14 +6,12 @@ interface CloudButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
-  disabled?: boolean;
 }
 
 const CloudButton: React.FC<CloudButtonProps> = ({
   children,
   onClick,
   className,
-  disabled = false,
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   
@@ -22,7 +20,7 @@ const CloudButton: React.FC<CloudButtonProps> = ({
     console.log("Squish sound!");
     
     // Trigger the onClick handler
-    if (onClick && !disabled) onClick();
+    if (onClick) onClick();
   };
   
   return (
@@ -31,25 +29,21 @@ const CloudButton: React.FC<CloudButtonProps> = ({
         "relative px-8 py-4 text-xl font-bubblegum text-wiz-purple",
         "cloud-button overflow-hidden z-10",
         "transition-all duration-300",
-        isHovering && !disabled ? "animate-jiggle shadow-lg" : "",
-        disabled ? "opacity-70 cursor-not-allowed" : "",
+        isHovering ? "animate-jiggle shadow-lg" : "",
         className
       )}
       onClick={handleClick}
       onMouseEnter={() => {
-        if (!disabled) {
-          setIsHovering(true);
-          // Play hover sound (would be implemented with an actual sound file)
-          console.log("Slide whistle up sound!");
-        }
+        setIsHovering(true);
+        // Play hover sound (would be implemented with an actual sound file)
+        console.log("Slide whistle up sound!");
       }}
       onMouseLeave={() => setIsHovering(false)}
-      disabled={disabled}
     >
       <span className="relative z-10">{children}</span>
       
       {/* Sparkle effect on hover */}
-      {isHovering && !disabled && (
+      {isHovering && (
         <>
           <span className="absolute top-0 left-1/4 text-xl animate-sparkle text-yellow-400 z-20">✨</span>
           <span className="absolute bottom-0 right-1/4 text-xl animate-sparkle text-yellow-400 z-20" style={{ animationDelay: "0.3s" }}>✨</span>

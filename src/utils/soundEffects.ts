@@ -2,7 +2,7 @@
 // Sound effect utility for the WIZ dashboard
 
 // Play mission-related sound effects
-export const playSoundEffect = (soundType: 'complete' | 'reward' | 'levelUp' | 'tabChange' | 'post' | 'squish' | 'poof') => {
+export const playSoundEffect = (soundType: 'complete' | 'reward' | 'levelUp' | 'tabChange' | 'post') => {
   const audio = new Audio();
   audio.volume = 0.5;
   
@@ -32,16 +32,6 @@ export const playSoundEffect = (soundType: 'complete' | 'reward' | 'levelUp' | '
       audio.src = '/sounds/pen-scratch.mp3';
       console.log("Playing pen scratch sound!");
       break;
-    case 'squish':
-      // Squish! 💫 – A squishy sound when clicking the cloud button
-      audio.src = '/sounds/squish.mp3';
-      console.log("Playing squish sound!");
-      break;
-    case 'poof':
-      // Poof! 💨 – A magical poof sound for transitions
-      audio.src = '/sounds/poof.mp3';
-      console.log("Playing poof sound!");
-      break;
     default:
       return;
   }
@@ -54,8 +44,6 @@ export const playSoundEffect = (soundType: 'complete' | 'reward' | 'levelUp' | '
     switch(soundType) {
       case 'complete':
       case 'reward':
-      case 'squish':
-      case 'poof':
         console.log("Using fallback sparkle sound");
         fallbackSound.src = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFzdFN0b3AuY29tIElEMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABUSVQyAAAAFgAAAFNvdW5kIEVmZmVjdCBMaWJyYXJ5VFBFMQAAAB4AAABCaWdTb3VuZEJhbmsuY29tIC8gTGFzdFN0b3AuY29tVEFMQgAAABYAAABTb3VuZCBFZmZlY3QgTGlicmFyeQ==';
         break;
