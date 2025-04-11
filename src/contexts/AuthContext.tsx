@@ -46,20 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(true);
       
       try {
-        // First check for existing session
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Current session:", currentSession?.user?.id);
-        
-        if (currentSession && mounted) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          if (currentSession.user) {
-            fetchProfile(currentSession.user.id);
-          }
-        }
-        
-        // Then set up listener for future auth changes
+        // Listen for auth state changes first
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
@@ -69,6 +56,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               setUser(newSession?.user ?? null);
               
               if (newSession?.user) {
+                console.log("Full user object:", newSession.user);
                 // Use setTimeout to prevent potential circular calls
                 setTimeout(() => {
                   fetchProfile(newSession.user.id);
@@ -79,6 +67,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
           }
         );
+        
+        // Then check for existing session
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Current session:", currentSession?.user?.id);
+        
+        if (currentSession && mounted) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          if (currentSession.user) {
+            console.log("User from session:", currentSession.user);
+            fetchProfile(currentSession.user.id);
+          }
+        }
         
         if (mounted) {
           setIsLoading(false);

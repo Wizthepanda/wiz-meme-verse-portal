@@ -1,5 +1,5 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import TopBar from "@/components/dashboard/TopBar";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,16 +11,18 @@ import { useMissionCategories } from "@/hooks/useMissionCategories";
 
 const MagicMissions = () => {
   const { toast } = useToast();
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { missionCategories, completedMissionIds, loading } = useMissionCategories();
+  const { missionCategories, completedMissionIds, loading: missionsLoading } = useMissionCategories();
   
   // Redirect to auth if not logged in
-  React.useEffect(() => {
-    if (!user && !loading) {
+  useEffect(() => {
+    console.log("MagicMissions - Auth state:", { user, isLoading });
+    if (!isLoading && !user) {
+      console.log("Redirecting to auth from Magic Missions");
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, isLoading, navigate]);
   
   // Handle quest completion
   const handleQuestClick = useCallback(async (mission: Mission) => {
@@ -60,6 +62,14 @@ const MagicMissions = () => {
     }
   }, [user, navigate, toast, refreshProfile]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
+        <div className="animate-spin text-6xl">✨</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
       {/* Top navigation */}
@@ -73,7 +83,7 @@ const MagicMissions = () => {
         </div>
         
         <MissionsContent 
-          loading={loading}
+          loading={missionsLoading}
           dailyMissions={missionCategories.daily}
           weeklyMissions={missionCategories.weekly}
           specialMissions={missionCategories.special}

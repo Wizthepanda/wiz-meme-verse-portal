@@ -45,6 +45,9 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
 
   // Get Twitter avatar and username
   const getTwitterAvatar = () => {
+    console.log("User identities:", user?.identities);
+    console.log("User metadata:", user?.user_metadata);
+    
     if (user?.identities && user.identities.length > 0) {
       const twitterIdentity = user.identities.find(
         identity => identity.provider === "twitter"
@@ -54,33 +57,50 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
         return twitterIdentity.identity_data.avatar_url;
       }
     }
+    
+    // Try from user metadata
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url;
+    }
+    
     return null;
   };
 
   const getTwitterUsername = () => {
+    console.log("Getting Twitter username");
+    console.log("User:", user);
+    
     if (user?.identities && user.identities.length > 0) {
       const twitterIdentity = user.identities.find(
         identity => identity.provider === "twitter"
       );
 
+      console.log("Twitter identity:", twitterIdentity);
+
       // Try to get the twitter username from different possible locations
-      return twitterIdentity?.identity_data?.full_name || 
-             twitterIdentity?.identity_data?.preferred_username ||
-             user?.user_metadata?.full_name ||
-             user?.user_metadata?.preferred_username ||
-             user?.user_metadata?.name ||
-             profile?.username || 
-             "Meme Wizard";
+      if (twitterIdentity?.identity_data) {
+        return twitterIdentity.identity_data.full_name || 
+               twitterIdentity.identity_data.preferred_username ||
+               twitterIdentity.identity_data.name;
+      }
     }
     
-    return user?.user_metadata?.full_name || 
-           user?.user_metadata?.preferred_username ||
-           profile?.username || 
-           "Meme Wizard";
+    // Try from user metadata
+    if (user?.user_metadata) {
+      return user.user_metadata.full_name || 
+             user.user_metadata.preferred_username ||
+             user.user_metadata.name ||
+             user.user_metadata.user_name;
+    }
+    
+    return profile?.username || "Meme Wizard";
   };
   
   const twitterAvatar = getTwitterAvatar();
   const twitterUsername = getTwitterUsername();
+  
+  console.log("Final username:", twitterUsername);
+  console.log("Final avatar:", twitterAvatar);
 
   return (
     <div className={cn(
