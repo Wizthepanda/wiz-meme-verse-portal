@@ -50,12 +50,12 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, [location.search, location.hash, user, toast]);
   
-  // Redirect to auth if not logged in
+  // Redirect to home if not logged in (instead of auth page)
   useEffect(() => {
     console.log("Dashboard - Auth state:", { user, isLoading, initializing });
     if (!isLoading && !initializing && !user) {
-      console.log("Redirecting to auth from Dashboard");
-      navigate('/auth');
+      console.log("Redirecting to home from Dashboard");
+      navigate('/');
     }
   }, [user, isLoading, initializing, navigate]);
 
