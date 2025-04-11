@@ -46,20 +46,22 @@ const Auth = () => {
     setAuthError(null);
     
     try {
-      // Get the current origin for the callback
+      // Generate absolute redirect URL using window.location.origin
       const redirectUrl = `${window.location.origin}/dashboard`;
       console.log("Redirect URL:", redirectUrl);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: false // Ensure browser redirects immediately
         }
       });
       
       if (error) throw error;
       
-      // Note: We won't show a success toast here as the page will redirect to Twitter
+      console.log("Auth response:", data);
+      // Page will be redirected by Supabase Auth
     } catch (error: any) {
       console.error("Sign in error:", error);
       setAuthError(error.message || "Could not connect to Twitter. Please try again.");

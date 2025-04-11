@@ -22,12 +22,15 @@ const Index = () => {
     setIsTransitioning(true);
     
     try {
+      // Generate absolute redirect URL using window.location.origin
       const redirectUrl = `${window.location.origin}/dashboard`;
+      console.log("Redirect URL:", redirectUrl);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: false // Ensure browser redirects immediately
         }
       });
       
@@ -35,19 +38,17 @@ const Index = () => {
         throw error;
       }
       
-      // Note: The page will redirect to Twitter, so we don't need a success message here
+      console.log("Auth response:", data);
+      // Note: The page will redirect to Twitter, so we don't need further navigation here
     } catch (error: any) {
       console.error("Login error:", error);
+      setIsTransitioning(false);
+      
       toast({
         title: "Login failed",
         description: error.message || "Could not connect to Twitter. Please try again.",
         variant: "destructive",
       });
-      
-      // Navigate to auth page if there's an error
-      setTimeout(() => {
-        navigate("/auth");
-      }, 1000);
     }
   };
   

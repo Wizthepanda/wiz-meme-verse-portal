@@ -43,39 +43,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const initializeAuth = async () => {
       setIsLoading(true);
       
-      // Check for existing session first to avoid flicker
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        await fetchProfile(currentSession.user.id);
-      }
-      
-      // Set up auth state listener for future changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, newSession) => {
-          console.log("Auth state changed:", event, newSession?.user?.id);
-          
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          
-          if (newSession?.user) {
-            // Use setTimeout to prevent potential circular calls
-            setTimeout(() => {
-              fetchProfile(newSession.user.id);
-            }, 0);
-          } else {
-            setProfile(null);
-          }
+      try {
+        // Check for existing session first to avoid flicker
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Current session:", currentSession?.user?.id);
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id);
         }
-      );
-      
-      setIsLoading(false);
-      
-      return () => {
-        subscription.unsubscribe();
-      };
+        
+        // Set up auth state listener for future changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, newSession) => {
+            console.log("Auth state changed:", event, newSession?.user?.id);
+            
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            
+            if (newSession?.user) {
+              // Use setTimeout to prevent potential circular calls
+              setTimeout(() => {
+                fetchProfile(newSession.user.id);
+              }, 0);
+            } else {
+              setProfile(null);
+            }
+          }
+        );
+        
+        setIsLoading(false);
+        
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        setIsLoading(false);
+      }
     };
     
     initializeAuth();
@@ -83,8 +90,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Sign out
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error("Sign out error:", error);
+      throw error;
+    }
   };
 
   return (
