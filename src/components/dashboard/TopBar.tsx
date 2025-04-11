@@ -1,11 +1,18 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Home, Laugh, Sparkles, Trophy, LogOut, User } from "lucide-react";
+import { Home, Laugh, Sparkles, Trophy, LogOut, User, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRankDisplayName } from "@/services/sparkleService";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TopBarProps {
   className?: string;
@@ -15,6 +22,7 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     try {
@@ -36,17 +44,17 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
 
   return (
     <div className={cn(
-      "bg-white/80 backdrop-blur-md py-3 px-6 flex items-center justify-between sticky top-0 z-10",
+      "bg-white/80 backdrop-blur-md py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10",
       "border-b border-wiz-lavender/30 shadow-sm",
       className
     )}>
       {/* Left side - User profile */}
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 rounded-full bg-wiz-purple/20 flex items-center justify-center border-2 border-wiz-lavender hover:scale-110 transition-transform">
-          {/* Placeholder for Twitter PFP */}
+          {/* Twitter Profile Picture */}
           <span className="text-xl">🐦</span>
         </div>
-        <div>
+        <div className={isMobile ? "hidden sm:block" : ""}>
           <p className="font-medium text-wiz-dark">
             {user ? (profile?.username || "@wizuser") : (
               <Link to="/auth" className="text-wiz-purple hover:underline flex items-center">
@@ -71,28 +79,65 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
       </div>
       
       {/* Right - Navigation */}
-      <div className="flex items-center space-x-4">
-        <Link to="/dashboard" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
-          <Home size={20} />
-        </Link>
-        <Link to="/meme-feed" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
-          <Laugh size={20} />
-        </Link>
-        <Link to="/magic-missions" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
-          <Sparkles size={20} />
-        </Link>
-        <Link to="/leaderboard" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
-          <Trophy size={20} />
-        </Link>
-        {user && (
-          <button 
-            onClick={handleLogout}
-            className="p-2 rounded-full bg-wiz-coral/10 text-wiz-coral hover:bg-wiz-coral/20 transition-all"
-          >
-            <LogOut size={20} />
-          </button>
-        )}
-      </div>
+      {isMobile ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
+              <Menu size={20} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-white/95 backdrop-blur-sm">
+            <DropdownMenuItem asChild>
+              <Link to="/dashboard" className="flex items-center gap-2 p-2">
+                <Home size={18} /> Dashboard
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/meme-feed" className="flex items-center gap-2 p-2">
+                <Laugh size={18} /> Meme Feed
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/magic-missions" className="flex items-center gap-2 p-2">
+                <Sparkles size={18} /> Missions
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/leaderboard" className="flex items-center gap-2 p-2">
+                <Trophy size={18} /> Leaderboard
+              </Link>
+            </DropdownMenuItem>
+            {user && (
+              <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 p-2 text-wiz-coral">
+                <LogOut size={18} /> Logout
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <div className="flex items-center space-x-4">
+          <Link to="/dashboard" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
+            <Home size={20} />
+          </Link>
+          <Link to="/meme-feed" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
+            <Laugh size={20} />
+          </Link>
+          <Link to="/magic-missions" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
+            <Sparkles size={20} />
+          </Link>
+          <Link to="/leaderboard" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
+            <Trophy size={20} />
+          </Link>
+          {user && (
+            <button 
+              onClick={handleLogout}
+              className="p-2 rounded-full bg-wiz-coral/10 text-wiz-coral hover:bg-wiz-coral/20 transition-all"
+            >
+              <LogOut size={20} />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

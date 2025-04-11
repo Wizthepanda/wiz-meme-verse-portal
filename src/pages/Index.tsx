@@ -50,16 +50,16 @@ const Index = () => {
           HALT, MORTAL! Can you even meme?
         </h2>
         
-        {/* Subtext */}
+        {/* Subtext - Updated as requested */}
         <p className="max-w-2xl text-xl md:text-2xl text-wiz-dark mb-12 text-center animate-slide-in">
-          This ain't no boring crypto zone. Link yer Twitter, unleash chaos, rack up 
-          <span className="inline-block mx-1 sparkle-element text-wiz-purple">✨Meme Sparkles✨</span> 
+          Link yer Twitter, unleash chaos, rack up 
+          <span className="inline-block mx-1 sparkle-element text-wiz-purple">✨Sparkles✨</span> 
           &amp; grab that $WIZ. No bots. No normies. Just meme lords.
         </p>
         
-        {/* CTA Button */}
+        {/* CTA Button - Updated to reference Twitter */}
         <CloudButton onClick={handleLoginClick} className="mb-8">
-          LINK TWITTER &amp; LET'S GOOO!
+          CONNECT TWITTER &amp; LET'S GOOO!
         </CloudButton>
         
         {/* Fine print */}
