@@ -9,12 +9,19 @@ import AnimatedLogo from "@/components/AnimatedLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { playSoundEffect } from "@/utils/soundEffects";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  
+  // Debug auth state
+  useEffect(() => {
+    console.log("Index - Auth state:", { user, isLoading });
+  }, [user, isLoading]);
   
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -24,22 +31,34 @@ const Index = () => {
     }
   }, [user, navigate, isLoading]);
   
-  const handleLoginClick = async () => {
-    // Play poof sound (would be implemented with actual sound file)
-    console.log("POOF sound!");
-    
-    // Start animation transition
-    setIsTransitioning(true);
+  const handleTwitterLogin = async () => {
+    if (isAuthenticating) return;
     
     try {
-      // Generate absolute redirect URL using window.location.origin
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      console.log("Redirect URL:", redirectUrl);
+      setIsAuthenticating(true);
       
+      // Play sound effects
+      playSoundEffect('squish');
+      
+      // Start animation transition
+      setIsTransitioning(true);
+      
+      // Play poof sound
+      playSoundEffect('poof');
+      console.log("POOF sound!");
+      
+      // Generate absolute redirect URL with timestamp and unique identifier
+      const timestamp = new Date().getTime();
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const redirectTo = `${window.location.origin}/dashboard?t=${timestamp}&r=${randomId}`;
+      console.log("Redirect URL:", redirectTo);
+      
+      // Use signInWithOAuth with the correct configuration
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: redirectTo,
+          scopes: 'tweet.read users.read offline.access',
         }
       });
       
@@ -48,10 +67,11 @@ const Index = () => {
       }
       
       console.log("Auth response:", data);
-      // Note: The page will redirect to Twitter, so we don't need further navigation here
+      // The user will be redirected to Twitter, then back to our redirectTo URL
     } catch (error: any) {
       console.error("Login error:", error);
       setIsTransitioning(false);
+      setIsAuthenticating(false);
       
       toast({
         title: "Login failed",
@@ -63,7 +83,7 @@ const Index = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
         <div className="animate-spin text-6xl">✨</div>
       </div>
     );
@@ -103,8 +123,8 @@ const Index = () => {
         </p>
         
         {/* CTA Button - Direct Twitter auth */}
-        <CloudButton onClick={handleLoginClick} className="mb-8">
-          CONNECT TWITTER &amp; LET'S GOOO!
+        <CloudButton onClick={handleTwitterLogin} className="mb-8" disabled={isAuthenticating}>
+          {isAuthenticating ? "CONNECTING..." : "CONNECT TWITTER & LET'S GOOO!"}
         </CloudButton>
         
         {/* Fine print */}
