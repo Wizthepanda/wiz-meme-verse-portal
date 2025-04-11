@@ -12,6 +12,8 @@ interface MissionCategoryCardProps {
   completedMissionIds: string[];
   onQuestComplete: (mission: Mission) => void;
   emptyMessage?: string;
+  maxHeight?: string;
+  hideTitle?: boolean;
 }
 
 const MissionCategoryCard: React.FC<MissionCategoryCardProps> = ({
@@ -20,18 +22,22 @@ const MissionCategoryCard: React.FC<MissionCategoryCardProps> = ({
   missions,
   completedMissionIds,
   onQuestComplete,
-  emptyMessage = "No missions available right now. Check back soon!"
+  emptyMessage = "No missions available right now. Check back soon!",
+  maxHeight = "400px",
+  hideTitle = false
 }) => {
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border-wiz-lavender/30">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
-          <span className="text-2xl font-bubblegum text-wiz-purple">{title}</span>
-          {icon}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-1 max-h-[400px] overflow-y-auto pr-2">
+    <Card className={hideTitle ? "bg-transparent shadow-none border-none" : "bg-white/80 backdrop-blur-sm border-wiz-lavender/30"}>
+      {!hideTitle && (
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2">
+            <span className="text-2xl font-bubblegum text-wiz-purple">{title}</span>
+            {icon}
+          </CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className={hideTitle ? "p-0" : undefined}>
+        <div className={`space-y-1 overflow-y-auto pr-2 ${hideTitle ? "" : "scrollbar-thin scrollbar-thumb-wiz-purple/20 scrollbar-track-transparent"}`} style={{ maxHeight }}>
           {missions.length > 0 ? (
             missions.map(mission => (
               <MemeQuest

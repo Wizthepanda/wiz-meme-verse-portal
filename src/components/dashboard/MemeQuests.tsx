@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Trophy, ExternalLink, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Mission } from "@/services/sparkleService";
-import MemeQuest from "./MemeQuest";
+import MissionCategoryCard from "@/components/missions/MissionCategoryCard";
 import { useMissions } from "@/hooks/useMissions";
 
 interface MemeQuestsProps {
@@ -30,27 +30,22 @@ const MemeQuests: React.FC<MemeQuestsProps> = ({ className }) => {
         </Link>
       </div>
       
-      <div className="space-y-1 max-h-[450px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-wiz-purple/20 scrollbar-track-transparent">
-        {loading ? (
-          <div className="text-center py-4 text-gray-500">
-            <Sparkles className="inline mr-2 animate-pulse" size={16} />
-            Loading missions...
-          </div>
-        ) : missions.length > 0 ? (
-          missions.map((mission: Mission) => (
-            <MemeQuest
-              key={mission.id}
-              mission={mission}
-              completed={completedMissionIds.includes(mission.id)}
-              onQuestComplete={() => handleQuestComplete(mission)}
-            />
-          ))
-        ) : (
-          <div className="text-center py-4 text-gray-500">
-            No missions available right now. Check back soon!
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div className="text-center py-4 text-gray-500">
+          <Sparkles className="inline mr-2 animate-pulse" size={16} />
+          Loading missions...
+        </div>
+      ) : (
+        <MissionCategoryCard
+          title=""
+          hideTitle={true}
+          missions={missions}
+          completedMissionIds={completedMissionIds}
+          onQuestComplete={handleQuestComplete}
+          maxHeight="450px"
+          emptyMessage="No missions available right now. Check back soon!"
+        />
+      )}
     </div>
   );
 };
