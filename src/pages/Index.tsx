@@ -31,7 +31,7 @@ const Index = () => {
     }
   }, [user, navigate, isLoading]);
   
-  const handleLoginClick = async () => {
+  const handleTwitterLogin = async () => {
     if (isAuthenticating) return;
     
     try {
@@ -119,7 +119,7 @@ const Index = () => {
         </p>
         
         {/* CTA Button - Direct Twitter auth */}
-        <CloudButton onClick={handleLoginClick} className="mb-8" disabled={isAuthenticating}>
+        <CloudButton onClick={handleTwitterLogin} className="mb-8" disabled={isAuthenticating}>
           {isAuthenticating ? "CONNECTING..." : "CONNECT TWITTER & LET'S GOOO!"}
         </CloudButton>
         
