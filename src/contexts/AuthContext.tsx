@@ -49,6 +49,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(true);
       
       try {
+        console.log("Initializing auth state...");
+        
         // Listen for auth state changes first
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {

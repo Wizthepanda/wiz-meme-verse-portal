@@ -16,8 +16,12 @@ const Dashboard = () => {
   
   // Check if we just completed an authentication flow
   useEffect(() => {
-    const justAuthenticated = location.search.includes('t=');
+    // Look for authentication params in URL
+    const justAuthenticated = location.search.includes('t=') || location.hash.includes('access_token');
+    
     if (justAuthenticated && user) {
+      console.log("User successfully authenticated and redirected to dashboard");
+      
       toast({
         title: "Login successful!",
         description: "Welcome to the Meme Wizard dashboard!",
@@ -27,7 +31,7 @@ const Dashboard = () => {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }
-  }, [location.search, user, toast]);
+  }, [location.search, location.hash, user, toast]);
   
   // Redirect to auth if not logged in
   useEffect(() => {

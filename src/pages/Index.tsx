@@ -47,17 +47,18 @@ const Index = () => {
       playSoundEffect('poof');
       console.log("POOF sound!");
       
-      // Generate absolute redirect URL using window.location.origin
-      // Add a parameter to avoid caching issues
+      // Generate absolute redirect URL with timestamp and unique identifier
       const timestamp = new Date().getTime();
-      const redirectTo = `${window.location.origin}/dashboard?t=${timestamp}`;
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const redirectTo = `${window.location.origin}/dashboard?t=${timestamp}&r=${randomId}`;
       console.log("Redirect URL:", redirectTo);
       
+      // Use signInWithOAuth with the correct configuration
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
           redirectTo: redirectTo,
-          scopes: 'tweet.read users.read',
+          scopes: 'tweet.read users.read offline.access',
         }
       });
       
@@ -66,7 +67,7 @@ const Index = () => {
       }
       
       console.log("Auth response:", data);
-      // The page will redirect to Twitter for auth, then to our redirectTo URL
+      // The user will be redirected to Twitter, then back to our redirectTo URL
     } catch (error: any) {
       console.error("Login error:", error);
       setIsTransitioning(false);
