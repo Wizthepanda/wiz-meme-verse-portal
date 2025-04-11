@@ -47,10 +47,12 @@ const Index = () => {
       playSoundEffect('poof');
       console.log("POOF sound!");
       
-      // Generate absolute redirect URL with timestamp and unique identifier
+      // Generate a unique redirect URL with multiple random parameters to avoid caching
       const timestamp = new Date().getTime();
       const randomId = Math.random().toString(36).substring(2, 15);
-      const redirectTo = `${window.location.origin}/dashboard?t=${timestamp}&r=${randomId}`;
+      const nonce = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+      
+      const redirectTo = `${window.location.origin}/dashboard?t=${timestamp}&r=${randomId}&n=${nonce}`;
       console.log("Redirect URL:", redirectTo);
       
       // Use signInWithOAuth with the correct configuration
@@ -82,11 +84,7 @@ const Index = () => {
   };
   
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
-        <div className="animate-spin text-6xl">✨</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
   
   return (
