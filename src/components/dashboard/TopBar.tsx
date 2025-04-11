@@ -1,7 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Home, Laugh, Sparkles, Trophy, LogOut, User, Menu } from "lucide-react";
+import { Home, Laugh, Sparkles, Trophy, LogOut, Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,8 +43,10 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
     }
   };
 
-  // Get Twitter avatar and username
+  // Get Twitter avatar and username with better console logging
   const getTwitterAvatar = () => {
+    console.log("Getting Twitter avatar");
+    console.log("User:", user);
     console.log("User identities:", user?.identities);
     console.log("User metadata:", user?.user_metadata);
     
@@ -53,16 +55,21 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
         identity => identity.provider === "twitter"
       );
       
+      console.log("Twitter identity:", twitterIdentity);
+      
       if (twitterIdentity?.identity_data?.avatar_url) {
+        console.log("Found avatar in identity_data:", twitterIdentity.identity_data.avatar_url);
         return twitterIdentity.identity_data.avatar_url;
       }
     }
     
     // Try from user metadata
     if (user?.user_metadata?.avatar_url) {
+      console.log("Found avatar in user_metadata:", user.user_metadata.avatar_url);
       return user.user_metadata.avatar_url;
     }
     
+    console.log("No avatar found, using fallback");
     return null;
   };
 
@@ -79,20 +86,27 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
 
       // Try to get the twitter username from different possible locations
       if (twitterIdentity?.identity_data) {
-        return twitterIdentity.identity_data.full_name || 
+        const username = twitterIdentity.identity_data.full_name || 
                twitterIdentity.identity_data.preferred_username ||
                twitterIdentity.identity_data.name;
+        
+        console.log("Username from identity_data:", username);
+        return username;
       }
     }
     
     // Try from user metadata
     if (user?.user_metadata) {
-      return user.user_metadata.full_name || 
+      const username = user.user_metadata.full_name || 
              user.user_metadata.preferred_username ||
              user.user_metadata.name ||
              user.user_metadata.user_name;
+      
+      console.log("Username from user_metadata:", username);
+      return username;
     }
     
+    console.log("Using profile username fallback:", profile?.username);
     return profile?.username || "Meme Wizard";
   };
   
@@ -127,8 +141,8 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
             {user ? (
               <span className="text-wiz-purple">{twitterUsername}</span>
             ) : (
-              <Link to="/auth" className="text-wiz-purple hover:underline flex items-center">
-                <User size={14} className="mr-1" /> Sign In
+              <Link to="/" className="text-wiz-purple hover:underline flex items-center">
+                Return Home
               </Link>
             )}
           </p>
@@ -202,6 +216,7 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
             <button 
               onClick={handleLogout}
               className="p-2 rounded-full bg-wiz-coral/10 text-wiz-coral hover:bg-wiz-coral/20 transition-all"
+              aria-label="Logout"
             >
               <LogOut size={20} />
             </button>

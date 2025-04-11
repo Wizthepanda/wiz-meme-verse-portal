@@ -32,20 +32,40 @@ const MemeQuests: React.FC<MemeQuestsProps> = ({ className }) => {
       </div>
       
       {loading ? (
-        <div className="text-center py-4 text-gray-500">
-          <Sparkles className="inline mr-2 animate-pulse" size={16} />
-          Loading missions...
+        <div className="flex justify-center items-center min-h-[300px]">
+          <div className="text-wiz-purple animate-pulse font-bold flex items-center">
+            <Sparkles className="mr-2" />
+            Loading Magic Missions...
+          </div>
         </div>
       ) : (
-        <MissionCategoryCard
-          title=""
-          hideTitle={true}
-          missions={missions}
-          completedMissionIds={completedMissionIds}
-          onQuestComplete={handleQuestComplete}
-          maxHeight={isMobile ? "300px" : "450px"}
-          emptyMessage="No missions available right now. Check back soon!"
-        />
+        <>
+          {missions.length > 0 ? (
+            <MissionCategoryCard
+              title=""
+              hideTitle={true}
+              missions={missions}
+              completedMissionIds={completedMissionIds}
+              onQuestComplete={handleQuestComplete}
+              maxHeight={isMobile ? "350px" : "550px"}
+              emptyMessage="No missions available right now. Check back soon!"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[300px] p-6 text-center">
+              <Sparkles size={32} className="text-wiz-purple mb-4 animate-pulse" />
+              <h3 className="text-xl font-bubblegum text-wiz-purple mb-2">No Active Missions</h3>
+              <p className="text-gray-600 max-w-md">
+                Your mission log is currently empty! Return soon for new magical quests and rewards.
+              </p>
+              <Link 
+                to="/magic-missions" 
+                className="mt-4 px-4 py-2 bg-wiz-purple/10 text-wiz-purple rounded-full hover:bg-wiz-purple/20 transition-all"
+              >
+                Check All Missions
+              </Link>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

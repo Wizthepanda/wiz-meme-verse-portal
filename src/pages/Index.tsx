@@ -9,12 +9,19 @@ import AnimatedLogo from "@/components/AnimatedLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { playSoundEffect } from "@/utils/soundEffects";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  
+  // Debug auth state
+  useEffect(() => {
+    console.log("Index - Auth state:", { user, isLoading });
+  }, [user, isLoading]);
   
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -25,13 +32,21 @@ const Index = () => {
   }, [user, navigate, isLoading]);
   
   const handleLoginClick = async () => {
-    // Play poof sound (would be implemented with actual sound file)
-    console.log("POOF sound!");
-    
-    // Start animation transition
-    setIsTransitioning(true);
+    if (isAuthenticating) return;
     
     try {
+      setIsAuthenticating(true);
+      
+      // Play sound effects
+      playSoundEffect('squish');
+      
+      // Start animation transition
+      setIsTransitioning(true);
+      
+      // Play poof sound
+      playSoundEffect('poof');
+      console.log("POOF sound!");
+      
       // Generate absolute redirect URL using window.location.origin
       const redirectUrl = `${window.location.origin}/dashboard`;
       console.log("Redirect URL:", redirectUrl);
@@ -52,6 +67,7 @@ const Index = () => {
     } catch (error: any) {
       console.error("Login error:", error);
       setIsTransitioning(false);
+      setIsAuthenticating(false);
       
       toast({
         title: "Login failed",
@@ -63,7 +79,7 @@ const Index = () => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30">
         <div className="animate-spin text-6xl">✨</div>
       </div>
     );
@@ -103,8 +119,8 @@ const Index = () => {
         </p>
         
         {/* CTA Button - Direct Twitter auth */}
-        <CloudButton onClick={handleLoginClick} className="mb-8">
-          CONNECT TWITTER &amp; LET'S GOOO!
+        <CloudButton onClick={handleLoginClick} className="mb-8" disabled={isAuthenticating}>
+          {isAuthenticating ? "CONNECTING..." : "CONNECT TWITTER & LET'S GOOO!"}
         </CloudButton>
         
         {/* Fine print */}
