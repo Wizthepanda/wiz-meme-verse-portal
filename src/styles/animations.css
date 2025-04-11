@@ -1,0 +1,44 @@
+
+@layer utilities {
+  .sparkle-element {
+    position: relative;
+  }
+
+  .sparkle-element::before,
+  .sparkle-element::after {
+    content: "✨";
+    position: absolute;
+    opacity: 0;
+    animation: sparkle 2s ease-in-out infinite;
+  }
+
+  .sparkle-element::before {
+    top: -5px;
+    left: -10px;
+    animation-delay: 0.5s;
+  }
+
+  .sparkle-element::after {
+    bottom: -5px;
+    right: -10px;
+  }
+
+  .parallax-layer {
+    will-change: transform;
+  }
+
+  @keyframes sparkle {
+    0% {
+      opacity: 0;
+      transform: scale(0.8) rotate(-10deg);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8) rotate(-10deg);
+    }
+  }
+}

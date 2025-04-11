@@ -1,0 +1,52 @@
+
+@layer utilities {
+  /* Enhanced mobile responsiveness */
+  @media (max-width: 640px) {
+    .container {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    h2 {
+      font-size: 1.25rem;
+    }
+    
+    .cloud-button::before {
+      width: 30px;
+      height: 30px;
+      top: -12px;
+      left: 15px;
+    }
+    
+    .cloud-button::after {
+      width: 45px;
+      height: 45px;
+      top: -20px;
+      left: 40px;
+    }
+  }
+  
+  /* Additional mobile improvements */
+  @media (max-width: 768px) {
+    .scrollbar-thin {
+      scrollbar-width: thin;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: rgba(155, 101, 222, 0.2);
+      border-radius: 20px;
+    }
+  }
+}
