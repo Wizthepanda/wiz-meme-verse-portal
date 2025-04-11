@@ -6,22 +6,49 @@ import FloatingElements from "@/components/FloatingElements";
 import AnimatedWiz from "@/components/AnimatedWiz";
 import CloudButton from "@/components/CloudButton";
 import AnimatedLogo from "@/components/AnimatedLogo";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isTransitioning, setIsTransitioning] = useState(false);
   
-  const handleLoginClick = () => {
+  const handleLoginClick = async () => {
     // Play poof sound (would be implemented with actual sound file)
     console.log("POOF sound!");
     
     // Start animation transition
     setIsTransitioning(true);
     
-    // Navigate after animation completes
-    setTimeout(() => {
-      navigate("/auth");
-    }, 1000);
+    try {
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'twitter',
+        options: {
+          redirectTo: redirectUrl
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Note: The page will redirect to Twitter, so we don't need a success message here
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "Could not connect to Twitter. Please try again.",
+        variant: "destructive",
+      });
+      
+      // Navigate to auth page if there's an error
+      setTimeout(() => {
+        navigate("/auth");
+      }, 1000);
+    }
   };
   
   return (
@@ -57,7 +84,7 @@ const Index = () => {
           &amp; grab that $WIZ. No bots. No normies. Just meme lords.
         </p>
         
-        {/* CTA Button - Connected to auth page */}
+        {/* CTA Button - Direct Twitter auth */}
         <CloudButton onClick={handleLoginClick} className="mb-8">
           CONNECT TWITTER &amp; LET'S GOOO!
         </CloudButton>

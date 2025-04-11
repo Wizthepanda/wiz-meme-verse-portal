@@ -43,24 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const initializeAuth = async () => {
       setIsLoading(true);
       
-      // Set up auth state listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, currentSession) => {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          
-          if (currentSession?.user) {
-            // Use setTimeout to prevent potential circular calls
-            setTimeout(() => {
-              fetchProfile(currentSession.user.id);
-            }, 0);
-          } else {
-            setProfile(null);
-          }
-        }
-      );
-      
-      // Check for existing session
+      // Check for existing session first to avoid flicker
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -68,6 +51,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (currentSession?.user) {
         await fetchProfile(currentSession.user.id);
       }
+      
+      // Set up auth state listener for future changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, newSession) => {
+          console.log("Auth state changed:", event, newSession?.user?.id);
+          
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          
+          if (newSession?.user) {
+            // Use setTimeout to prevent potential circular calls
+            setTimeout(() => {
+              fetchProfile(newSession.user.id);
+            }, 0);
+          } else {
+            setProfile(null);
+          }
+        }
+      );
       
       setIsLoading(false);
       
