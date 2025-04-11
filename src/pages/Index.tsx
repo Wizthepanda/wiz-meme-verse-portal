@@ -6,6 +6,7 @@ import FloatingElements from "@/components/FloatingElements";
 import AnimatedWiz from "@/components/AnimatedWiz";
 import CloudButton from "@/components/CloudButton";
 import AnimatedLogo from "@/components/AnimatedLogo";
+import LoadingScreen from "@/components/dashboard/LoadingScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
