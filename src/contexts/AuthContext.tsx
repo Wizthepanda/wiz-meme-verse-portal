@@ -44,20 +44,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(true);
       
       try {
-        // Check for existing session first to avoid flicker
+        // Check for existing session first
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Current session:", currentSession?.user?.id);
         
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          if (currentSession.user) {
+            await fetchProfile(currentSession.user.id);
+          }
         }
         
         // Set up auth state listener for future changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, newSession) => {
+          async (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
             
             setSession(newSession);

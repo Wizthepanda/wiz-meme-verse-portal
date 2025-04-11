@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ParallaxClouds from "@/components/ParallaxClouds";
 import FloatingElements from "@/components/FloatingElements";
@@ -8,11 +8,20 @@ import CloudButton from "@/components/CloudButton";
 import AnimatedLogo from "@/components/AnimatedLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   
   const handleLoginClick = async () => {
     // Play poof sound (would be implemented with actual sound file)
@@ -30,7 +39,6 @@ const Index = () => {
         provider: 'twitter',
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: false // Ensure browser redirects immediately
         }
       });
       

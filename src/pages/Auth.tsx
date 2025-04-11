@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Twitter } from "lucide-react";
 import AnimatedWiz from "@/components/AnimatedWiz";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -54,7 +55,6 @@ const Auth = () => {
         provider: 'twitter',
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: false // Ensure browser redirects immediately
         }
       });
       
@@ -90,9 +90,10 @@ const Auth = () => {
         </CardHeader>
         <CardContent className="flex flex-col items-center">
           {authError && (
-            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-4 w-full text-sm">
-              {authError}
-            </div>
+            <Alert variant="destructive" className="mb-4 w-full">
+              <AlertTitle>Authentication Error</AlertTitle>
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
           )}
           
           <Button 
