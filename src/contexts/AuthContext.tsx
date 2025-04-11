@@ -40,54 +40,66 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Initialize auth state
   useEffect(() => {
+    let mounted = true;
+
     const initializeAuth = async () => {
       setIsLoading(true);
       
       try {
-        // Check for existing session first
+        // First check for existing session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Current session:", currentSession?.user?.id);
         
-        if (currentSession) {
+        if (currentSession && mounted) {
           setSession(currentSession);
           setUser(currentSession.user);
           
           if (currentSession.user) {
-            await fetchProfile(currentSession.user.id);
+            fetchProfile(currentSession.user.id);
           }
         }
         
-        // Set up auth state listener for future changes
+        // Then set up listener for future auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
+          (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
             
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
-            
-            if (newSession?.user) {
-              // Use setTimeout to prevent potential circular calls
-              setTimeout(() => {
-                fetchProfile(newSession.user.id);
-              }, 0);
-            } else {
-              setProfile(null);
+            if (mounted) {
+              setSession(newSession);
+              setUser(newSession?.user ?? null);
+              
+              if (newSession?.user) {
+                // Use setTimeout to prevent potential circular calls
+                setTimeout(() => {
+                  fetchProfile(newSession.user.id);
+                }, 0);
+              } else {
+                setProfile(null);
+              }
             }
           }
         );
         
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
         
         return () => {
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error("Auth initialization error:", error);
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
     
     initializeAuth();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Sign out
