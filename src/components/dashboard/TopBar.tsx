@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRankDisplayName } from "@/services/sparkleService";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +33,7 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
         description: "See you soon, meme lord!",
         variant: "default",
       });
-      navigate("/auth");
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Logout failed",
@@ -42,7 +43,7 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
     }
   };
 
-  // Get Twitter avatar if available
+  // Get Twitter avatar and username
   const getTwitterAvatar = () => {
     if (user?.identities && user.identities.length > 0) {
       const twitterIdentity = user.identities.find(
@@ -55,12 +56,31 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
     }
     return null;
   };
+
+  const getTwitterUsername = () => {
+    if (user?.identities && user.identities.length > 0) {
+      const twitterIdentity = user.identities.find(
+        identity => identity.provider === "twitter"
+      );
+
+      // Try to get the twitter username from different possible locations
+      return twitterIdentity?.identity_data?.full_name || 
+             twitterIdentity?.identity_data?.preferred_username ||
+             user?.user_metadata?.full_name ||
+             user?.user_metadata?.preferred_username ||
+             user?.user_metadata?.name ||
+             profile?.username || 
+             "Meme Wizard";
+    }
+    
+    return user?.user_metadata?.full_name || 
+           user?.user_metadata?.preferred_username ||
+           profile?.username || 
+           "Meme Wizard";
+  };
   
   const twitterAvatar = getTwitterAvatar();
-  const twitterUsername = user?.user_metadata?.full_name || 
-                          user?.user_metadata?.preferred_username ||
-                          profile?.username || 
-                          "@wizuser";
+  const twitterUsername = getTwitterUsername();
 
   return (
     <div className={cn(
@@ -70,20 +90,23 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
     )}>
       {/* Left side - User profile */}
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-full bg-wiz-purple/20 flex items-center justify-center border-2 border-wiz-lavender hover:scale-110 transition-transform overflow-hidden">
+        <Avatar className="w-10 h-10 border-2 border-wiz-lavender hover:scale-110 transition-transform">
           {twitterAvatar ? (
-            <img 
+            <AvatarImage 
               src={twitterAvatar} 
-              alt="Twitter profile" 
-              className="w-full h-full object-cover"
+              alt={`${twitterUsername}'s profile`} 
             />
           ) : (
-            <span className="text-xl">🐦</span>
+            <AvatarFallback className="bg-wiz-purple/20 text-wiz-purple">
+              {twitterUsername ? twitterUsername.charAt(0).toUpperCase() : '🧙'}
+            </AvatarFallback>
           )}
-        </div>
+        </Avatar>
         <div className={isMobile ? "hidden sm:block" : ""}>
           <p className="font-medium text-wiz-dark">
-            {user ? twitterUsername : (
+            {user ? (
+              <span className="text-wiz-purple">{twitterUsername}</span>
+            ) : (
               <Link to="/auth" className="text-wiz-purple hover:underline flex items-center">
                 <User size={14} className="mr-1" /> Sign In
               </Link>

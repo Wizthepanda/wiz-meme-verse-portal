@@ -13,15 +13,16 @@ import { useAuth } from "@/contexts/AuthContext";
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Redirect to dashboard if already logged in
   useEffect(() => {
-    if (user) {
+    if (!isLoading && user) {
+      console.log("User is logged in, redirecting to dashboard");
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
   
   const handleLoginClick = async () => {
     // Play poof sound (would be implemented with actual sound file)
@@ -60,6 +61,14 @@ const Index = () => {
     }
   };
   
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin text-6xl">✨</div>
+      </div>
+    );
+  }
+  
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Background effects */}
@@ -86,7 +95,7 @@ const Index = () => {
           HALT, MORTAL! Can you even meme?
         </h2>
         
-        {/* Subtext - Updated as requested */}
+        {/* Subtext */}
         <p className="max-w-2xl text-xl md:text-2xl text-wiz-dark mb-12 text-center animate-slide-in">
           Link yer Twitter, unleash chaos, rack up 
           <span className="inline-block mx-1 sparkle-element text-wiz-purple">✨Sparkles✨</span> 
