@@ -20,7 +20,7 @@ const Index = () => {
     
     // Navigate after animation completes
     setTimeout(() => {
-      navigate("/dashboard");
+      navigate("/auth");
     }, 1000);
   };
   
@@ -57,7 +57,7 @@ const Index = () => {
           &amp; grab that $WIZ. No bots. No normies. Just meme lords.
         </p>
         
-        {/* CTA Button - Updated to reference Twitter */}
+        {/* CTA Button - Connected to auth page */}
         <CloudButton onClick={handleLoginClick} className="mb-8">
           CONNECT TWITTER &amp; LET'S GOOO!
         </CloudButton>

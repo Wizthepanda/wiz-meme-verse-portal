@@ -42,6 +42,26 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
     }
   };
 
+  // Get Twitter avatar if available
+  const getTwitterAvatar = () => {
+    if (user?.identities && user.identities.length > 0) {
+      const twitterIdentity = user.identities.find(
+        identity => identity.provider === "twitter"
+      );
+      
+      if (twitterIdentity?.identity_data?.avatar_url) {
+        return twitterIdentity.identity_data.avatar_url;
+      }
+    }
+    return null;
+  };
+  
+  const twitterAvatar = getTwitterAvatar();
+  const twitterUsername = user?.user_metadata?.full_name || 
+                          user?.user_metadata?.preferred_username ||
+                          profile?.username || 
+                          "@wizuser";
+
   return (
     <div className={cn(
       "bg-white/80 backdrop-blur-md py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10",
@@ -50,13 +70,20 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
     )}>
       {/* Left side - User profile */}
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-full bg-wiz-purple/20 flex items-center justify-center border-2 border-wiz-lavender hover:scale-110 transition-transform">
-          {/* Twitter Profile Picture */}
-          <span className="text-xl">🐦</span>
+        <div className="w-10 h-10 rounded-full bg-wiz-purple/20 flex items-center justify-center border-2 border-wiz-lavender hover:scale-110 transition-transform overflow-hidden">
+          {twitterAvatar ? (
+            <img 
+              src={twitterAvatar} 
+              alt="Twitter profile" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-xl">🐦</span>
+          )}
         </div>
         <div className={isMobile ? "hidden sm:block" : ""}>
           <p className="font-medium text-wiz-dark">
-            {user ? (profile?.username || "@wizuser") : (
+            {user ? twitterUsername : (
               <Link to="/auth" className="text-wiz-purple hover:underline flex items-center">
                 <User size={14} className="mr-1" /> Sign In
               </Link>
