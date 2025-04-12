@@ -11,6 +11,7 @@ import Leaderboard from "./pages/Leaderboard";
 import MemeFeed from "./pages/MemeFeed";
 import MagicMissions from "./pages/MagicMissions";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +28,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/meme-feed" element={<MemeFeed />} />
             <Route path="/magic-missions" element={<MagicMissions />} />
-            {/* Removed the Auth route */}
+            <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

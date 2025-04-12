@@ -10,12 +10,13 @@ import LoadingScreen from "@/components/dashboard/LoadingScreen";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { playSoundEffect } from "@/utils/soundEffects";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   
   // Debug auth state
   useEffect(() => {
@@ -30,25 +31,47 @@ const Index = () => {
     }
   }, [user, navigate, isLoading]);
   
-  const handleDashboardNavigation = () => {
-    // Play sound effects
-    playSoundEffect('squish');
-    
-    // Start animation transition
-    setIsTransitioning(true);
-    
-    // Play poof sound
-    playSoundEffect('poof');
-    console.log("POOF sound!");
-    
-    // Add a short delay for the animation
-    setTimeout(() => {
-      // Navigate to dashboard directly
-      navigate('/dashboard');
-    }, 1000);
+  const handleTwitterAuth = async () => {
+    try {
+      // Play sound effect
+      playSoundEffect('squish');
+      
+      setAuthLoading(true);
+      
+      // Get the current URL's origin for the redirect
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      console.log("Redirect URL:", redirectUrl);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'twitter',
+        options: {
+          redirectTo: redirectUrl,
+        }
+      });
+      
+      if (error) throw error;
+      
+      console.log("Twitter auth response:", data);
+      // Redirect will be handled by Supabase Auth
+      
+    } catch (error: any) {
+      console.error("Twitter auth error:", error);
+      toast({
+        title: "Twitter Authentication Failed",
+        description: error.message || "Could not connect to Twitter. Please try again.",
+        variant: "destructive",
+      });
+      setAuthLoading(false);
+    }
   };
   
-  if (isLoading) {
+  const handleDashboardNavigation = () => {
+    // For users who want to skip Twitter auth and go straight to dashboard
+    playSoundEffect('squish');
+    navigate('/dashboard');
+  };
+  
+  if (isLoading || authLoading) {
     return <LoadingScreen />;
   }
   
@@ -57,13 +80,6 @@ const Index = () => {
       {/* Background effects */}
       <ParallaxClouds />
       <FloatingElements />
-      
-      {/* Transition overlay */}
-      {isTransitioning && (
-        <div className="fixed inset-0 bg-white z-50 animate-puff-in flex items-center justify-center">
-          <span className="text-8xl">POOF! 💨</span>
-        </div>
-      )}
       
       {/* Main content container */}
       <div className="relative z-10 container mx-auto px-4 min-h-screen flex flex-col items-center justify-center py-16">
@@ -85,17 +101,25 @@ const Index = () => {
           &amp; grab that $WIZ. No bots. No normies. Just meme lords.
         </p>
         
-        {/* CTA Button - Direct navigation to dashboard */}
+        {/* Twitter Auth Button */}
         <CloudButton 
-          onClick={handleDashboardNavigation} 
-          className="mb-8" 
+          onClick={handleTwitterAuth} 
+          className="mb-4" 
           id="twitter-login-button"
         >
           CONNECT TWITTER & LET'S GOOO!
         </CloudButton>
         
+        {/* Skip to dashboard option */}
+        <button
+          onClick={handleDashboardNavigation}
+          className="text-wiz-dark hover:text-wiz-purple underline transition-colors"
+        >
+          Skip sign-in (continue as guest)
+        </button>
+        
         {/* Fine print */}
-        <p className="text-sm text-wiz-dark flex items-center">
+        <p className="mt-6 text-sm text-wiz-dark flex items-center">
           Meme responsibly. <span className="ml-2 text-lg">😉</span>
         </p>
       </div>
