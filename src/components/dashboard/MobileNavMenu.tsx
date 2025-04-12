@@ -47,9 +47,11 @@ const MobileNavMenu: React.FC<MobileNavMenuProps> = ({
             <Trophy size={18} /> Leaderboard
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onLogout} className="flex items-center gap-2 p-2 text-wiz-coral">
-          <LogOut size={18} /> Logout
-        </DropdownMenuItem>
+        {showLogoutButton && (
+          <DropdownMenuItem onClick={onLogout} className="flex items-center gap-2 p-2 text-wiz-coral">
+            <LogOut size={18} /> Logout
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

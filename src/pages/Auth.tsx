@@ -74,6 +74,11 @@ const Auth = () => {
     }
   };
   
+  // Simple function to navigate to dashboard (skip sign in)
+  const handleSkipSignIn = () => {
+    navigate('/dashboard');
+  };
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-wiz-lavender/30 via-wiz-coral/20 to-wiz-banana/30 p-4">
       <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm shadow-xl border border-wiz-lavender/30">
@@ -103,6 +108,14 @@ const Auth = () => {
           >
             <Twitter size={20} />
             {isLoading ? "Connecting..." : "Sign in with Twitter"}
+          </Button>
+          
+          <Button
+            onClick={handleSkipSignIn}
+            variant="ghost"
+            className="mt-4"
+          >
+            Skip sign-in (continue as guest)
           </Button>
           
           <p className="mt-6 text-sm text-center text-gray-500">

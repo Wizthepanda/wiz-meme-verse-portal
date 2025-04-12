@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTwitterProfile } from "@/hooks/useTwitterProfile";
 
-// Import our components
+// Import our new components
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileInfo from "./ProfileInfo";
 import SparkleCounter from "./SparkleCounter";
@@ -61,7 +61,6 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
             username={username || profile?.username || "Meme Wizard"} 
             profile={profile}
             isAuthenticated={!!user}
-            onLogout={handleLogout}
           />
         </div>
       </div>
@@ -73,12 +72,12 @@ const TopBar: React.FC<TopBarProps> = ({ className }) => {
       {isMobile ? (
         <MobileNavMenu 
           onLogout={handleLogout} 
-          showLogoutButton={true} 
+          showLogoutButton={!!user} 
         />
       ) : (
         <TopBarNavigation 
           onLogout={handleLogout} 
-          showLogoutButton={true} 
+          showLogoutButton={!!user} 
         />
       )}
     </div>
