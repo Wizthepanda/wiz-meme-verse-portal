@@ -25,12 +25,14 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
   return (
     <div className="flex items-center gap-3">
       {isAuthenticated && (
-        <Avatar className="h-8 w-8 border border-wiz-lavender/30">
-          <AvatarImage src={avatarUrl || ''} alt={displayName} />
-          <AvatarFallback className="bg-wiz-purple/10 text-wiz-purple">
-            {displayName.substring(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link to="/dashboard/profile" className="hover:opacity-80 transition-opacity">
+          <Avatar className="h-8 w-8 border border-wiz-lavender/30">
+            <AvatarImage src={avatarUrl || ''} alt={displayName} />
+            <AvatarFallback className="bg-wiz-purple/10 text-wiz-purple">
+              {displayName.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
       )}
       
       <div>
@@ -38,7 +40,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
           {isAuthenticated ? (
             <span className="text-wiz-purple">{displayName}</span>
           ) : (
-            <Link to="/" className="text-wiz-purple hover:underline flex items-center">
+            <Link to="/auth" className="text-wiz-purple hover:underline flex items-center">
               Sign In
             </Link>
           )}

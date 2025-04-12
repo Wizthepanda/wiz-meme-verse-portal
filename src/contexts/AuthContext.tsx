@@ -34,16 +34,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (user) {
         try {
           console.log("Attempting to create profile for new user:", userId);
-          // Try to get username from user metadata
-          const username = user.user_metadata?.preferred_username || 
+          // Extract Twitter data from user metadata
+          const twitterData = user.app_metadata?.provider === 'twitter' ? 
+            user.identities?.find(identity => identity.provider === 'twitter')?.identity_data : null;
+          
+          const username = twitterData?.preferred_username || 
+                          twitterData?.full_name || 
+                          twitterData?.name ||
+                          user.user_metadata?.preferred_username || 
                           user.user_metadata?.full_name || 
                           user.user_metadata?.name || 
                           'New Wizard';
           
+          const avatarUrl = twitterData?.avatar_url || 
+                           user.user_metadata?.avatar_url;
+          
           // Insert new profile
           const { data, error: insertError } = await supabase
             .from('profiles')
-            .insert([{ id: userId, username, sparkles: 0, rank: 'meme_peasant' }])
+            .insert([{ 
+              id: userId, 
+              username, 
+              avatar_url: avatarUrl,
+              sparkles: 0, 
+              rank: 'meme_peasant' 
+            }])
             .select()
             .single();
             
@@ -80,7 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // IMPORTANT: Set up auth state change listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
+          (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
             
             if (mounted) {

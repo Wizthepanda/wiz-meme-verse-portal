@@ -46,6 +46,7 @@ const Index = () => {
         provider: 'twitter',
         options: {
           redirectTo: redirectUrl,
+          scopes: 'tweet.read users.read',
         }
       });
       
