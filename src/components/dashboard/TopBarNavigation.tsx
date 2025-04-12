@@ -5,13 +5,9 @@ import { Home, Laugh, Sparkles, Trophy, LogOut } from "lucide-react";
 
 interface TopBarNavigationProps {
   onLogout: () => void;
-  showLogoutButton: boolean;
 }
 
-const TopBarNavigation: React.FC<TopBarNavigationProps> = ({ 
-  onLogout, 
-  showLogoutButton 
-}) => {
+const TopBarNavigation: React.FC<TopBarNavigationProps> = ({ onLogout }) => {
   return (
     <div className="flex items-center space-x-4">
       <Link to="/dashboard" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">

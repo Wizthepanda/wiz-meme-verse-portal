@@ -10,7 +10,7 @@ export function useTwitterProfile(): TwitterProfile {
   const { user } = useAuth();
   
   const getTwitterAvatar = (): string | null => {
-    console.log("Getting Twitter avatar");
+    console.log("Getting Twitter avatar from user:", user);
     
     if (user?.identities && user.identities.length > 0) {
       const twitterIdentity = user.identities.find(
@@ -31,7 +31,7 @@ export function useTwitterProfile(): TwitterProfile {
   };
 
   const getTwitterUsername = (): string | null => {
-    console.log("Getting Twitter username");
+    console.log("Getting Twitter username from user:", user);
     
     if (user?.identities && user.identities.length > 0) {
       const twitterIdentity = user.identities.find(

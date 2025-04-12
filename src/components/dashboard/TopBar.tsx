@@ -46,10 +46,7 @@ const TopBar = () => {
             <SparkleCounter sparkles={profile.sparkles} />
           )}
           
-          <TopBarNavigation 
-            onLogout={handleLogout} 
-            showLogoutButton={!!user}
-          />
+          <TopBarNavigation onLogout={handleLogout} />
         </div>
       </div>
     </header>
