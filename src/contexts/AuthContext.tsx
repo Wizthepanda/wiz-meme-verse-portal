@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         );
         
-        // Then check for existing session
+        // Then check for existing session (this should detect URL tokens too due to detectSessionInUrl)
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Current session check:", currentSession?.user?.id);
         console.log("Full session object:", currentSession);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ParallaxClouds from "@/components/ParallaxClouds";
@@ -31,6 +30,11 @@ const Index = () => {
     
     if (hasAuthParams) {
       console.log("Auth params detected in URL, processing...");
+      
+      // Clear hash to avoid issues with repeated processing
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
   }, [user, isLoading]);
   
@@ -58,8 +62,8 @@ const Index = () => {
       playSoundEffect('poof');
       console.log("POOF sound!");
       
-      // Use production domain for redirects
-      const redirectTo = window.location.origin + "/dashboard";
+      // Use exact production domain for redirects
+      const redirectTo = 'https://www.wizthepanda.com/dashboard';
       console.log("Redirect URL:", redirectTo);
       
       // Call Supabase Twitter OAuth with explicit configuration
