@@ -36,7 +36,7 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      {/* Top navigation */}
+      {/* Top navigation with profile info */}
       <TopBar />
       
       {/* Main content */}

@@ -1,6 +1,7 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getRankDisplayName } from "@/services/sparkleService";
 import { Profile } from "@/services/sparkleService";
 
@@ -8,22 +9,22 @@ interface ProfileInfoProps {
   username: string | null;
   profile: Profile | null;
   isAuthenticated: boolean;
+  onLogout: () => void;
 }
 
 const ProfileInfo: React.FC<ProfileInfoProps> = ({ 
   username, 
   profile,
-  isAuthenticated
+  isAuthenticated,
+  onLogout
 }) => {
   return (
     <div>
       <p className="font-medium text-wiz-dark">
-        {isAuthenticated ? (
+        {username ? (
           <span className="text-wiz-purple">{username}</span>
         ) : (
-          <Link to="/" className="text-wiz-purple hover:underline flex items-center">
-            Return Home
-          </Link>
+          <span className="text-wiz-purple">Meme Wizard</span>
         )}
       </p>
       {profile && (

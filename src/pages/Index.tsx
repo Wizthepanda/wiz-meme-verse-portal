@@ -65,12 +65,6 @@ const Index = () => {
     }
   };
   
-  const handleDashboardNavigation = () => {
-    // For users who want to skip Twitter auth and go straight to dashboard
-    playSoundEffect('squish');
-    navigate('/dashboard');
-  };
-  
   if (isLoading || authLoading) {
     return <LoadingScreen />;
   }
@@ -109,14 +103,6 @@ const Index = () => {
         >
           CONNECT TWITTER & LET'S GOOO!
         </CloudButton>
-        
-        {/* Skip to dashboard option */}
-        <button
-          onClick={handleDashboardNavigation}
-          className="text-wiz-dark hover:text-wiz-purple underline transition-colors"
-        >
-          Skip sign-in (continue as guest)
-        </button>
         
         {/* Fine print */}
         <p className="mt-6 text-sm text-wiz-dark flex items-center">
