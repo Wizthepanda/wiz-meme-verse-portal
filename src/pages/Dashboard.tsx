@@ -4,13 +4,11 @@ import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/dashboard/TopBar";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DashboardContent from "@/components/dashboard/DashboardContent";
-import LoadingScreen from "@/components/dashboard/LoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
-  const [initializing, setInitializing] = useState(true);
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -35,20 +33,6 @@ const Dashboard = () => {
       }
     }
   }, [toast]);
-  
-  // Initialize dashboard
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setInitializing(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Show loading screen while initializing or checking auth
-  if (initializing || isLoading) {
-    return <LoadingScreen />;
-  }
 
   return (
     <DashboardLayout>
