@@ -6,6 +6,9 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://fufkgbehjidcoytcrdlo.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1ZmtnYmVoamlkY295dGNyZGxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyOTU0NTksImV4cCI6MjA1OTg3MTQ1OX0.dds_sB2HNUK6gSaFZCk_ghl5OtOsMCseXIGyvTGWqnI";
 
+console.log('SUPABASE INITIALIZATION - URL:', SUPABASE_URL);
+console.log('SUPABASE INITIALIZATION - KEY (first 10 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 10) + '...');
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -23,13 +26,70 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Add a debug listener for auth state changes
+console.log('Supabase client potentially initialized:', supabase);
+
+// Add a debug listener for auth state changes with more detailed logging
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log("Global Auth State Change:", event, session?.user?.id);
-  console.log("Global Auth State Change - Full session data:", JSON.stringify(session, null, 2));
+  console.log("🚨 ONAUTHSTATECHANGE FIRED! 🚨", event);
+  console.log("🔑 SESSION USER ID:", session?.user?.id);
+  console.log("📊 FULL SESSION DATA:", JSON.stringify(session, null, 2));
+  
+  // Log specific parts of the session to identify issues
+  if (session) {
+    console.log("✅ Session exists with:");
+    console.log("- Access Token (first 10 chars):", session.access_token ? session.access_token.substring(0, 10) + '...' : 'MISSING');
+    console.log("- Refresh Token (exists):", !!session.refresh_token);
+    console.log("- Provider:", session.user?.app_metadata?.provider);
+    console.log("- User email:", session.user?.email);
+  } else {
+    console.log("❌ Session is null/undefined");
+  }
+  
+  // Check for potential errors in user metadata
+  if (session?.user?.user_metadata) {
+    console.log("👤 User metadata:", session.user.user_metadata);
+  }
 });
 
-// Log initial session on load
-supabase.auth.getSession().then(({ data }) => {
-  console.log("Initial Session Check:", data.session?.user?.id);
+// Log initial session on load with more details
+supabase.auth.getSession().then(({ data, error }) => {
+  console.log("Initial Session Check - Session exists:", !!data.session);
+  console.log("Initial Session Check - User ID:", data.session?.user?.id);
+  
+  if (error) {
+    console.error("⚠️ Initial session error:", error);
+  }
+  
+  if (data.session) {
+    console.log("Initial session access token (first 10):", data.session.access_token.substring(0, 10) + '...');
+  }
 });
+
+// Add network logging for debugging Twitter auth
+const originalFetch = window.fetch;
+window.fetch = function(input, init) {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  
+  if (url.includes('supabase') && url.includes('token')) {
+    console.log('🌐 NETWORK: Supabase token request detected:', url);
+    console.log('🌐 NETWORK: Request headers:', init?.headers);
+    
+    return originalFetch(input, init).then(response => {
+      console.log(`🌐 NETWORK: Supabase token response status: ${response.status}`);
+      
+      // Clone the response to log its body (without consuming the original)
+      response.clone().json().then(data => {
+        console.log('🌐 NETWORK: Supabase token response body:', data);
+      }).catch(e => {
+        console.log('🌐 NETWORK: Could not parse token response as JSON');
+      });
+      
+      return response;
+    }).catch(error => {
+      console.error('🌐 NETWORK: Supabase token request failed:', error);
+      throw error;
+    });
+  }
+  
+  return originalFetch(input, init);
+};
