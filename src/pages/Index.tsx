@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ParallaxClouds from "@/components/ParallaxClouds";
@@ -50,7 +49,7 @@ const Index = () => {
           }
           
           // Check if we have a user but no session - could indicate a processing issue
-          if (!data.session && data.user) {
+          if (!data.session && data.session?.user) {
             console.warn("🎯 Warning: User exists but no session after hash processing");
           }
         } catch (err) {
