@@ -26,15 +26,13 @@ const TopBarNavigation: React.FC<TopBarNavigationProps> = ({
       <Link to="/leaderboard" className="p-2 rounded-full bg-wiz-purple/10 text-wiz-purple hover:bg-wiz-purple/20 transition-all">
         <Trophy size={20} />
       </Link>
-      {showLogoutButton && (
-        <button 
-          onClick={onLogout}
-          className="p-2 rounded-full bg-wiz-coral/10 text-wiz-coral hover:bg-wiz-coral/20 transition-all"
-          aria-label="Logout"
-        >
-          <LogOut size={20} />
-        </button>
-      )}
+      <button 
+        onClick={onLogout}
+        className="p-2 rounded-full bg-wiz-coral/10 text-wiz-coral hover:bg-wiz-coral/20 transition-all"
+        aria-label="Logout"
+      >
+        <LogOut size={20} />
+      </button>
     </div>
   );
 };

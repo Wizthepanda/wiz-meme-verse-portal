@@ -30,6 +30,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setProfile(userProfile);
     } catch (error) {
       console.error("Error fetching profile:", error);
+      // Create a new profile if one doesn't exist
+      if (user) {
+        try {
+          console.log("Attempting to create profile for new user:", userId);
+          // Try to get username from user metadata
+          const username = user.user_metadata?.preferred_username || 
+                          user.user_metadata?.full_name || 
+                          user.user_metadata?.name || 
+                          'New Wizard';
+          
+          // Insert new profile
+          const { data, error: insertError } = await supabase
+            .from('profiles')
+            .insert([{ id: userId, username, sparkles: 0, rank: 'meme_peasant' }])
+            .select()
+            .single();
+            
+          if (insertError) {
+            console.error("Error creating new profile:", insertError);
+          } else {
+            console.log("Created new profile:", data);
+            setProfile(data);
+          }
+        } catch (createError) {
+          console.error("Failed to create profile:", createError);
+        }
+      }
     }
   };
 

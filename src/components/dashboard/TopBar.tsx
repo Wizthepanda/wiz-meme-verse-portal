@@ -1,86 +1,58 @@
 
 import React from "react";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTwitterProfile } from "@/hooks/useTwitterProfile";
+import ProfileInfo from "./ProfileInfo";
+import TopBarNavigation from "./TopBarNavigation";
+import SparkleCounter from "./SparkleCounter";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useTwitterProfile } from "@/hooks/useTwitterProfile";
 
-// Import our new components
-import ProfileAvatar from "./ProfileAvatar";
-import ProfileInfo from "./ProfileInfo";
-import SparkleCounter from "./SparkleCounter";
-import TopBarNavigation from "./TopBarNavigation";
-import MobileNavMenu from "./MobileNavMenu";
-
-interface TopBarProps {
-  className?: string;
-}
-
-const TopBar: React.FC<TopBarProps> = ({ className }) => {
-  const { toast } = useToast();
+const TopBar = () => {
   const { user, profile, signOut } = useAuth();
+  const { username } = useTwitterProfile();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const { username, avatarUrl } = useTwitterProfile();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
       await signOut();
+      navigate('/');
       toast({
         title: "Logged out successfully",
-        description: "See you soon, meme lord!",
-        variant: "default",
+        description: "You have been logged out of your account"
       });
-      navigate("/");
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Logout error:", error);
       toast({
         title: "Logout failed",
-        description: error.message || "An error occurred during logout",
-        variant: "destructive",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive"
       });
     }
   };
 
   return (
-    <div className={cn(
-      "bg-white/80 backdrop-blur-md py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10",
-      "border-b border-wiz-lavender/30 shadow-sm",
-      className
-    )}>
-      {/* Left side - User profile */}
-      <div className="flex items-center space-x-3">
-        <ProfileAvatar 
-          avatarUrl={avatarUrl} 
+    <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-wiz-lavender/10 py-3 px-4 sm:px-6">
+      <div className="flex justify-between items-center">
+        <ProfileInfo 
           username={username} 
+          profile={profile} 
+          isAuthenticated={!!user}
         />
         
-        <div className={isMobile ? "hidden sm:block" : ""}>
-          <ProfileInfo 
-            username={username || profile?.username || "Meme Wizard"} 
-            profile={profile}
-            isAuthenticated={!!user}
+        <div className="flex items-center gap-2 sm:gap-6">
+          {profile && (
+            <SparkleCounter sparkles={profile.sparkles} />
+          )}
+          
+          <TopBarNavigation 
+            onLogout={handleLogout} 
+            showLogoutButton={!!user}
           />
         </div>
       </div>
-      
-      {/* Center - Sparkles counter */}
-      <SparkleCounter count={profile?.sparkles || 0} />
-      
-      {/* Right - Navigation */}
-      {isMobile ? (
-        <MobileNavMenu 
-          onLogout={handleLogout} 
-          showLogoutButton={!!user} 
-        />
-      ) : (
-        <TopBarNavigation 
-          onLogout={handleLogout} 
-          showLogoutButton={!!user} 
-        />
-      )}
-    </div>
+    </header>
   );
 };
 
