@@ -12,9 +12,9 @@ export function useTwitterProfile(): TwitterProfile {
   const getTwitterAvatar = (): string | null => {
     console.log("Getting Twitter avatar from user:", user);
     
-    // First check profile's avatar_url if it exists
-    if (profile?.avatar_url) {
-      return profile.avatar_url;
+    // First check profile's avatar_url if it exists in user_metadata
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url;
     }
     
     // Then try from Twitter identity
@@ -26,11 +26,6 @@ export function useTwitterProfile(): TwitterProfile {
       if (twitterIdentity?.identity_data?.avatar_url) {
         return twitterIdentity.identity_data.avatar_url;
       }
-    }
-    
-    // Try from user metadata
-    if (user?.user_metadata?.avatar_url) {
-      return user.user_metadata.avatar_url;
     }
     
     return null;
