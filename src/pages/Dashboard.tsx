@@ -17,19 +17,13 @@ const Dashboard = () => {
   
   // Check if we just completed an authentication flow
   useEffect(() => {
-    // Look for authentication params in URL
-    const params = new URLSearchParams(location.search);
-    const hash = location.hash;
+    console.log("Dashboard - Current URL:", window.location.href);
     
-    // Consider different auth indicators
-    const hasHashToken = hash.includes('access_token');
-    const hasRefreshToken = hash.includes('refresh_token');
-    const hasTimestamp = params.has('t');
-    const hasRandomId = params.has('r');
+    // Look for authentication indicators
+    const hasToken = location.hash.includes('access_token');
+    const hasError = location.hash.includes('error');
     
-    const justAuthenticated = hasHashToken || hasRefreshToken || hasTimestamp || hasRandomId;
-    
-    if (justAuthenticated && user) {
+    if (hasToken && user) {
       console.log("User successfully authenticated and redirected to dashboard");
       
       toast({
@@ -37,9 +31,20 @@ const Dashboard = () => {
         description: "Welcome to the Meme Wizard dashboard!",
       });
       
-      // Clean up the URL - remove both query params and hash
+      // Clean up the URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
+    } else if (hasError) {
+      console.error("Authentication error in URL:", location.hash);
+      toast({
+        title: "Login failed",
+        description: "There was an error connecting to Twitter. Please try again.",
+        variant: "destructive",
+      });
+      
+      // Clean URL and redirect to home
+      window.history.replaceState({}, document.title, "/");
+      navigate("/");
     }
     
     // Set initializing to false after a short delay to allow auth to complete
@@ -48,9 +53,9 @@ const Dashboard = () => {
     }, 1500);
     
     return () => clearTimeout(timer);
-  }, [location.search, location.hash, user, toast]);
+  }, [location.hash, user, toast, navigate]);
   
-  // Redirect to home if not logged in (instead of auth page)
+  // Redirect to home if not logged in
   useEffect(() => {
     console.log("Dashboard - Auth state:", { user, isLoading, initializing });
     if (!isLoading && !initializing && !user) {

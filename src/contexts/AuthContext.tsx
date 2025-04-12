@@ -68,7 +68,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 
                 // Use setTimeout to prevent potential circular calls
                 setTimeout(() => {
-                  fetchProfile(newSession.user.id);
+                  if (mounted) {
+                    fetchProfile(newSession.user.id);
+                  }
                 }, 0);
               } else {
                 setProfile(null);

@@ -22,6 +22,16 @@ const Index = () => {
   // Debug auth state
   useEffect(() => {
     console.log("Index - Auth state:", { user, isLoading });
+    
+    // Check for hash fragment which indicates a redirect from Twitter OAuth
+    const hasAuthParams = window.location.hash && (
+      window.location.hash.includes('access_token') || 
+      window.location.hash.includes('error')
+    );
+    
+    if (hasAuthParams) {
+      console.log("Auth params detected in URL, processing...");
+    }
   }, [user, isLoading]);
   
   // Redirect to dashboard if already logged in
@@ -48,15 +58,11 @@ const Index = () => {
       playSoundEffect('poof');
       console.log("POOF sound!");
       
-      // Generate a unique redirect URL with multiple random parameters to avoid caching
-      const timestamp = new Date().getTime();
-      const randomId = Math.random().toString(36).substring(2, 15);
-      const nonce = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-      
-      const redirectTo = `${window.location.origin}/dashboard?t=${timestamp}&r=${randomId}&n=${nonce}`;
+      // Use production domain for redirects
+      const redirectTo = window.location.origin + "/dashboard";
       console.log("Redirect URL:", redirectTo);
       
-      // Use signInWithOAuth with the correct configuration
+      // Call Supabase Twitter OAuth with explicit configuration
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
@@ -72,7 +78,7 @@ const Index = () => {
       console.log("Auth response:", data);
       // The user will be redirected to Twitter, then back to our redirectTo URL
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Twitter login error:", error);
       setIsTransitioning(false);
       setIsAuthenticating(false);
       
@@ -122,7 +128,12 @@ const Index = () => {
         </p>
         
         {/* CTA Button - Direct Twitter auth */}
-        <CloudButton onClick={handleTwitterLogin} className="mb-8" disabled={isAuthenticating}>
+        <CloudButton 
+          onClick={handleTwitterLogin} 
+          className="mb-8" 
+          disabled={isAuthenticating}
+          id="twitter-login-button"
+        >
           {isAuthenticating ? "CONNECTING..." : "CONNECT TWITTER & LET'S GOOO!"}
         </CloudButton>
         
