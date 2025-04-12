@@ -51,24 +51,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         console.log("Initializing auth state...");
         
-        // Listen for auth state changes first
+        // IMPORTANT: Set up auth state change listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.id);
-            console.log("Session from event:", newSession);
             
             if (mounted) {
+              // Update state with new session information
               setSession(newSession);
               setUser(newSession?.user ?? null);
               
               if (newSession?.user) {
-                console.log("User from auth change:", newSession.user);
-                console.log("User metadata:", newSession.user.user_metadata);
-                console.log("User identities:", newSession.user.identities);
+                console.log("User from auth change:", newSession.user.id);
                 
-                // Use setTimeout to prevent potential circular calls
+                // Use setTimeout to prevent circular calls
                 setTimeout(() => {
-                  if (mounted) {
+                  if (mounted && newSession?.user) {
                     fetchProfile(newSession.user.id);
                   }
                 }, 0);
@@ -79,23 +77,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         );
         
-        // Then check for existing session (this should detect URL tokens too due to detectSessionInUrl)
+        // THEN check for existing session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Current session check:", currentSession?.user?.id);
-        console.log("Full session object:", currentSession);
         
         if (currentSession && mounted) {
           setSession(currentSession);
           setUser(currentSession.user);
           
           if (currentSession.user) {
-            console.log("Full user object from session:", currentSession.user);
-            console.log("User metadata from session:", currentSession.user.user_metadata);
-            console.log("User identities from session:", currentSession.user.identities);
             fetchProfile(currentSession.user.id);
           }
         }
         
+        // Always set loading to false after initialization
         if (mounted) {
           setIsLoading(false);
         }
@@ -118,7 +113,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  // Sign out
+  // Sign out function
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -131,16 +126,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw error;
     }
   };
-
-  // Debug current state
-  useEffect(() => {
-    console.log("AuthContext current state:", {
-      user: user ? { id: user.id, email: user.email } : null,
-      hasSession: !!session,
-      profile: profile ? { id: profile.id, username: profile.username } : null,
-      isLoading
-    });
-  }, [user, session, profile, isLoading]);
 
   return (
     <AuthContext.Provider value={{

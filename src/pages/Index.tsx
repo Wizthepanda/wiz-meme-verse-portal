@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ParallaxClouds from "@/components/ParallaxClouds";
@@ -22,19 +23,9 @@ const Index = () => {
   useEffect(() => {
     console.log("Index - Auth state:", { user, isLoading });
     
-    // Check for hash fragment which indicates a redirect from Twitter OAuth
-    const hasAuthParams = window.location.hash && (
-      window.location.hash.includes('access_token') || 
-      window.location.hash.includes('error')
-    );
-    
-    if (hasAuthParams) {
-      console.log("Auth params detected in URL, processing...");
-      
-      // Clear hash to avoid issues with repeated processing
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
+    // If we detect a hash fragment in the URL, log it for debugging
+    if (window.location.hash) {
+      console.log("Hash fragment detected in URL:", window.location.hash);
     }
   }, [user, isLoading]);
   
@@ -63,7 +54,8 @@ const Index = () => {
       console.log("POOF sound!");
       
       // Use exact production domain for redirects
-      const redirectTo = 'https://www.wizthepanda.com/dashboard';
+      // Make sure this matches EXACTLY what's configured in your Twitter app
+      const redirectTo = window.location.origin + '/dashboard';
       console.log("Redirect URL:", redirectTo);
       
       // Call Supabase Twitter OAuth with explicit configuration
@@ -81,7 +73,7 @@ const Index = () => {
       
       console.log("Auth response:", data);
       // The user will be redirected to Twitter, then back to our redirectTo URL
-    } catch (error: any) {
+    } catch (error) {
       console.error("Twitter login error:", error);
       setIsTransitioning(false);
       setIsAuthenticating(false);

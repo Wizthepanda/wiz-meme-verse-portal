@@ -17,8 +17,13 @@ export const supabase = createClient<Database>(
       persistSession: true,
       storage: localStorage,
       autoRefreshToken: true,
-      detectSessionInUrl: true, // Critical for OAuth redirects
-      flowType: 'implicit' // Use implicit flow for browser-based auth
+      detectSessionInUrl: true,
+      flowType: 'implicit'
     }
   }
 );
+
+// Add a debug listener for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log("Global Auth State Change:", event, session?.user?.id);
+});
