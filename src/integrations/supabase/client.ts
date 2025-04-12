@@ -26,4 +26,10 @@ export const supabase = createClient<Database>(
 // Add a debug listener for auth state changes
 supabase.auth.onAuthStateChange((event, session) => {
   console.log("Global Auth State Change:", event, session?.user?.id);
+  console.log("Global Auth State Change - Full session data:", JSON.stringify(session, null, 2));
+});
+
+// Log initial session on load
+supabase.auth.getSession().then(({ data }) => {
+  console.log("Initial Session Check:", data.session?.user?.id);
 });

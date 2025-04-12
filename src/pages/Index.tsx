@@ -23,6 +23,29 @@ const Index = () => {
     console.log("Index - Auth state:", { user, isLoading });
   }, [user, isLoading]);
   
+  // Check for auth hash in URL
+  useEffect(() => {
+    const checkHashParams = async () => {
+      // Check if URL contains an access token hash parameter (#access_token=...)
+      if (window.location.hash && window.location.hash.includes('access_token')) {
+        console.log("ACCESS TOKEN DETECTED IN URL HASH:", window.location.hash);
+        try {
+          // The Supabase client will automatically parse the hash
+          const { data, error } = await supabase.auth.getSession();
+          console.log("Get session after hash detection:", data, error);
+          
+          if (error) {
+            throw error;
+          }
+        } catch (err) {
+          console.error("Error processing auth hash:", err);
+        }
+      }
+    };
+    
+    checkHashParams();
+  }, []);
+  
   // Redirect to dashboard if already logged in
   useEffect(() => {
     if (!isLoading && user) {
@@ -40,7 +63,7 @@ const Index = () => {
       
       // Get the current URL's origin for the redirect
       const redirectUrl = `${window.location.origin}/dashboard`;
-      console.log("Redirect URL:", redirectUrl);
+      console.log("Twitter auth - Redirect URL:", redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',

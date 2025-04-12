@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log("Fetching profile for user:", userId);
     try {
       const userProfile = await fetchUserProfile(userId);
-      console.log("User profile fetched:", userProfile);
+      console.log("User profile fetched successfully:", userProfile);
       setProfile(userProfile);
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -37,6 +37,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // Extract Twitter data from user metadata
           const twitterData = user.app_metadata?.provider === 'twitter' ? 
             user.identities?.find(identity => identity.provider === 'twitter')?.identity_data : null;
+          
+          console.log("Twitter data for profile creation:", twitterData);
+          console.log("User metadata for profile creation:", user.user_metadata);
           
           const username = twitterData?.preferred_username || 
                           twitterData?.full_name || 
@@ -49,13 +52,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const avatarUrl = twitterData?.avatar_url || 
                            user.user_metadata?.avatar_url;
           
+          console.log("Creating profile with username:", username, "and avatar:", avatarUrl);
+          
           // Insert new profile
           const { data, error: insertError } = await supabase
             .from('profiles')
             .insert([{ 
               id: userId, 
               username, 
-              avatar_url: avatarUrl,
               sparkles: 0, 
               rank: 'meme_peasant' 
             }])
@@ -65,7 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (insertError) {
             console.error("Error creating new profile:", insertError);
           } else {
-            console.log("Created new profile:", data);
+            console.log("Created new profile successfully:", data);
             setProfile(data);
           }
         } catch (createError) {
@@ -96,7 +100,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // IMPORTANT: Set up auth state change listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
-            console.log("Auth state changed:", event, newSession?.user?.id);
+            console.log("AUTH STATE CHANGED - EVENT:", event);
+            console.log("AUTH STATE CHANGED - SESSION:", newSession?.user?.id);
+            console.log("AUTH STATE CHANGED - Full session data:", JSON.stringify(newSession, null, 2));
             
             if (mounted) {
               // Update state with new session information
@@ -105,6 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               
               if (newSession?.user) {
                 console.log("User from auth change:", newSession.user.id);
+                console.log("User details:", JSON.stringify(newSession.user, null, 2));
                 
                 // Use setTimeout to prevent circular calls
                 setTimeout(() => {
@@ -119,17 +126,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         );
         
+        console.log("Auth state change listener registered");
+        
         // THEN check for existing session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log("Current session check:", currentSession?.user?.id);
         
         if (currentSession && mounted) {
+          console.log("Existing session found, updating state");
           setSession(currentSession);
           setUser(currentSession.user);
           
           if (currentSession.user) {
             fetchProfile(currentSession.user.id);
           }
+        } else {
+          console.log("No existing session found");
         }
         
         // Always set loading to false after initialization
