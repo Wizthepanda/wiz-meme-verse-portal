@@ -7,6 +7,7 @@ interface CloudButtonProps {
   onClick?: () => void;
   className?: string;
   disabled?: boolean;
+  id?: string; // Added id prop to the interface
 }
 
 const CloudButton: React.FC<CloudButtonProps> = ({
@@ -14,6 +15,7 @@ const CloudButton: React.FC<CloudButtonProps> = ({
   onClick,
   className,
   disabled = false,
+  id, // Add id to the component props
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   
@@ -27,6 +29,7 @@ const CloudButton: React.FC<CloudButtonProps> = ({
   
   return (
     <button
+      id={id} // Pass the id to the button element
       className={cn(
         "relative px-8 py-4 text-xl font-bubblegum text-wiz-purple",
         "cloud-button overflow-hidden z-10",
