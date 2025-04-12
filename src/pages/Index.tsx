@@ -7,7 +7,6 @@ import AnimatedWiz from "@/components/AnimatedWiz";
 import CloudButton from "@/components/CloudButton";
 import AnimatedLogo from "@/components/AnimatedLogo";
 import LoadingScreen from "@/components/dashboard/LoadingScreen";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { playSoundEffect } from "@/utils/soundEffects";
@@ -17,16 +16,10 @@ const Index = () => {
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
   
   // Debug auth state
   useEffect(() => {
     console.log("Index - Auth state:", { user, isLoading });
-    
-    // If we detect a hash fragment in the URL, log it for debugging
-    if (window.location.hash) {
-      console.log("Hash fragment detected in URL:", window.location.hash);
-    }
   }, [user, isLoading]);
   
   // Redirect to dashboard if already logged in
@@ -37,53 +30,22 @@ const Index = () => {
     }
   }, [user, navigate, isLoading]);
   
-  const handleTwitterLogin = async () => {
-    if (isAuthenticating) return;
+  const handleDashboardNavigation = () => {
+    // Play sound effects
+    playSoundEffect('squish');
     
-    try {
-      setIsAuthenticating(true);
-      
-      // Play sound effects
-      playSoundEffect('squish');
-      
-      // Start animation transition
-      setIsTransitioning(true);
-      
-      // Play poof sound
-      playSoundEffect('poof');
-      console.log("POOF sound!");
-      
-      // Use exact production domain for redirects
-      // Make sure this matches EXACTLY what's configured in your Twitter app
-      const redirectTo = window.location.origin + '/dashboard';
-      console.log("Redirect URL:", redirectTo);
-      
-      // Call Supabase Twitter OAuth with explicit configuration
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'twitter',
-        options: {
-          redirectTo: redirectTo,
-          scopes: 'tweet.read users.read offline.access',
-        }
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log("Auth response:", data);
-      // The user will be redirected to Twitter, then back to our redirectTo URL
-    } catch (error) {
-      console.error("Twitter login error:", error);
-      setIsTransitioning(false);
-      setIsAuthenticating(false);
-      
-      toast({
-        title: "Login failed",
-        description: error.message || "Could not connect to Twitter. Please try again.",
-        variant: "destructive",
-      });
-    }
+    // Start animation transition
+    setIsTransitioning(true);
+    
+    // Play poof sound
+    playSoundEffect('poof');
+    console.log("POOF sound!");
+    
+    // Add a short delay for the animation
+    setTimeout(() => {
+      // Navigate to dashboard directly
+      navigate('/dashboard');
+    }, 1000);
   };
   
   if (isLoading) {
@@ -123,14 +85,13 @@ const Index = () => {
           &amp; grab that $WIZ. No bots. No normies. Just meme lords.
         </p>
         
-        {/* CTA Button - Direct Twitter auth */}
+        {/* CTA Button - Direct navigation to dashboard */}
         <CloudButton 
-          onClick={handleTwitterLogin} 
+          onClick={handleDashboardNavigation} 
           className="mb-8" 
-          disabled={isAuthenticating}
           id="twitter-login-button"
         >
-          {isAuthenticating ? "CONNECTING..." : "CONNECT TWITTER & LET'S GOOO!"}
+          CONNECT TWITTER & LET'S GOOO!
         </CloudButton>
         
         {/* Fine print */}
