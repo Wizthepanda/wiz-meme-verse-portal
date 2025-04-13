@@ -2,16 +2,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserProfile, Profile } from "@/services/sparkleService";
 import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: Profile | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,84 +16,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-
-  // Fetch user profile when user changes
-  const fetchProfile = async (userId: string) => {
-    console.log("Fetching profile for user:", userId);
-    try {
-      const userProfile = await fetchUserProfile(userId);
-      console.log("User profile fetched successfully:", userProfile);
-      setProfile(userProfile);
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      // Create a new profile if one doesn't exist
-      if (user) {
-        try {
-          console.log("Attempting to create profile for new user:", userId);
-          // Extract Twitter data from user metadata
-          const twitterData = user.app_metadata?.provider === 'twitter' ? 
-            user.identities?.find(identity => identity.provider === 'twitter')?.identity_data : null;
-          
-          console.log("Twitter data for profile creation:", twitterData);
-          console.log("User metadata for profile creation:", user.user_metadata);
-          
-          const username = twitterData?.preferred_username || 
-                          twitterData?.full_name || 
-                          twitterData?.name ||
-                          user.user_metadata?.preferred_username || 
-                          user.user_metadata?.full_name || 
-                          user.user_metadata?.name || 
-                          'New Wizard';
-          
-          const avatarUrl = twitterData?.avatar_url || 
-                           user.user_metadata?.avatar_url;
-          
-          console.log("Creating profile with username:", username, "and avatar:", avatarUrl);
-          
-          // Insert new profile
-          const { data, error: insertError } = await supabase
-            .from('profiles')
-            .insert([{ 
-              id: userId, 
-              username, 
-              sparkles: 0, 
-              rank: 'meme_peasant' 
-            }])
-            .select()
-            .single();
-            
-          if (insertError) {
-            console.error("Error creating new profile:", insertError);
-            toast({
-              title: "Profile Error",
-              description: "Could not create your profile. Please try again.",
-              variant: "destructive",
-            });
-          } else {
-            console.log("Created new profile successfully:", data);
-            setProfile(data);
-            toast({
-              title: "Welcome, Wizard!",
-              description: "Your meme journey begins now. Start collecting sparkles!",
-            });
-          }
-        } catch (createError) {
-          console.error("Failed to create profile:", createError);
-        }
-      }
-    }
-  };
-
-  // Refresh user profile
-  const refreshProfile = async () => {
-    if (user?.id) {
-      console.log("Refreshing profile for user:", user.id);
-      await fetchProfile(user.id);
-    }
-  };
 
   // Initialize auth state
   useEffect(() => {
@@ -119,33 +40,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               setSession(newSession);
               setUser(newSession?.user ?? null);
               
-              if (newSession?.user) {
-                console.log("User from auth change:", newSession.user.id);
-                
-                // Use setTimeout to prevent circular calls
-                setTimeout(() => {
-                  if (mounted && newSession?.user) {
-                    fetchProfile(newSession.user.id);
-                  }
-                }, 0);
-                
-                // Show welcome toast on sign in
-                if (event === 'SIGNED_IN') {
-                  toast({
-                    title: "Successfully Connected!",
-                    description: "Welcome to the Wizverse, meme lord!",
-                  });
-                }
-              } else {
-                setProfile(null);
-                
-                // Show logout toast on sign out
-                if (event === 'SIGNED_OUT') {
-                  toast({
-                    title: "Logged Out",
-                    description: "Come back soon for more meme magic!",
-                  });
-                }
+              // Show welcome toast on sign in
+              if (event === 'SIGNED_IN') {
+                toast({
+                  title: "Successfully Connected!",
+                  description: "Welcome to the Wizverse, meme lord!",
+                });
+              }
+              
+              // Show logout toast on sign out
+              if (event === 'SIGNED_OUT') {
+                toast({
+                  title: "Logged Out",
+                  description: "Come back soon for more meme magic!",
+                });
               }
             }
           }
@@ -161,10 +69,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.log("Existing session found, updating state");
           setSession(currentSession);
           setUser(currentSession.user);
-          
-          if (currentSession.user) {
-            fetchProfile(currentSession.user.id);
-          }
         } else {
           console.log("No existing session found");
         }
@@ -204,7 +108,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
       setUser(null);
       setSession(null);
-      setProfile(null);
     } catch (error) {
       console.error("Sign out error:", error);
       toast({
@@ -220,10 +123,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider value={{
       session,
       user,
-      profile,
       isLoading,
-      signOut,
-      refreshProfile
+      signOut
     }}>
       {children}
     </AuthContext.Provider>

@@ -2,13 +2,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { completeMission, fetchMissions, Mission } from "@/services/sparkleService";
 import { supabase } from "@/integrations/supabase/client";
 import { playSoundEffect } from "@/utils/soundEffects";
 
 export const useMissions = () => {
   const { toast } = useToast();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user } = useAuth();
+  const { profile, refreshProfile } = useProfile();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [completedMissionIds, setCompletedMissionIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect } from "react";
 import TopBar from "@/components/dashboard/TopBar";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { completeMission, Mission } from "@/services/sparkleService";
 import { playSoundEffect } from "@/utils/soundEffects";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +12,8 @@ import { useMissionCategories } from "@/hooks/useMissionCategories";
 
 const MagicMissions = () => {
   const { toast } = useToast();
-  const { user, refreshProfile, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
+  const { refreshProfile } = useProfile();
   const navigate = useNavigate();
   const { missionCategories, completedMissionIds, loading: missionsLoading } = useMissionCategories();
   

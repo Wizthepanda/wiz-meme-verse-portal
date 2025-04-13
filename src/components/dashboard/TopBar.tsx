@@ -1,6 +1,7 @@
 
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { useTwitterProfile } from "@/hooks/useTwitterProfile";
 import ProfileInfo from "./ProfileInfo";
 import TopBarNavigation from "./TopBarNavigation";
@@ -9,7 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 const TopBar = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   const { username } = useTwitterProfile();
   const navigate = useNavigate();
   const { toast } = useToast();

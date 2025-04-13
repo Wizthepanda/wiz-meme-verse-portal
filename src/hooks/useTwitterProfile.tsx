@@ -1,5 +1,6 @@
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 
 interface TwitterProfile {
   username: string | null;
@@ -7,7 +8,8 @@ interface TwitterProfile {
 }
 
 export function useTwitterProfile(): TwitterProfile {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   
   const getTwitterAvatar = (): string | null => {
     console.log("Getting Twitter avatar from user:", user);
