@@ -46,6 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               
               // Show welcome toast on sign in
               if (event === 'SIGNED_IN') {
+                console.log("SIGNED_IN event detected with user:", newSession?.user?.id);
                 toast({
                   title: "Successfully Connected!",
                   description: "Welcome to the Wizverse, meme lord!",
@@ -84,6 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.log("Existing session found, updating state");
           setSession(currentSession);
           setUser(currentSession.user);
+          setIsLoading(false);
         } else {
           console.log("No existing session found");
           
@@ -104,7 +106,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (mounted) {
             setIsLoading(false);
           }
-        }, 1500);
+        }, 1000);
         
         return () => {
           subscription.unsubscribe();

@@ -34,22 +34,28 @@ export const useAuthRedirect = () => {
   useEffect(() => {
     if (!isLoading && user) {
       console.log("📱 User is logged in, redirecting to dashboard", user.id);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true }); // Use replace to prevent back button issues
     }
   }, [user, navigate, isLoading]);
 
-  // Process auth hash parameters aggressively
+  // Process auth hash parameters on load
   useEffect(() => {
-    const processHashParams = async () => {
-      console.log("📱 Index - Processing hash parameters");
-      console.log("📱 Current URL:", window.location.href);
+    console.log("📱 Index - Current location:", location.pathname);
+    console.log("📱 Current URL:", window.location.href);
+    
+    // If we're already on the dashboard or auth pages, don't process hash
+    if (location.pathname === '/dashboard' || location.pathname === '/auth-status') {
+      console.log("📱 Already on dashboard or auth-status page, skipping hash processing");
+      return;
+    }
+    
+    // Check if URL contains an access token hash parameter
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log("🎯 ACCESS TOKEN DETECTED IN URL HASH");
       
-      // Check if URL contains an access token hash parameter
-      if (window.location.hash && window.location.hash.includes('access_token')) {
-        console.log("🎯 ACCESS TOKEN DETECTED IN URL HASH");
-        
+      (async () => {
         try {
-          // Use our improved hash processing function
+          // Use improved hash processing function
           const result = await processAuthHashParams();
           
           console.log("🎯 Hash processing result:", result);
@@ -62,16 +68,13 @@ export const useAuthRedirect = () => {
               window.history.replaceState(null, document.title, window.location.pathname);
             }
             
-            // Give a moment for state to update before redirect
-            setTimeout(() => {
-              navigate('/dashboard');
-            }, 300);
-            return;
+            // Navigate to dashboard
+            navigate('/dashboard', { replace: true });
+          } else {
+            // If processing failed, go to auth status page
+            console.log("🎯 Failed to establish session from hash, going to auth status");
+            navigate('/auth-status');
           }
-          
-          // If processing failed, go to auth status page
-          console.log("🎯 Failed to establish session from hash, going to auth status");
-          navigate('/auth-status');
         } catch (err) {
           console.error("🎯 Exception during auth hash processing:", err);
           toast({
@@ -82,38 +85,7 @@ export const useAuthRedirect = () => {
           
           navigate('/auth-status');
         }
-      }
-    };
-    
-    // Process hash params with a slight delay to ensure everything is loaded
-    setTimeout(processHashParams, 200);
-  }, [toast, navigate]);
-
-  // Enhanced session check on component mount
-  useEffect(() => {
-    const checkSessionAndLog = async () => {
-      console.log("📱 Index - Checking session status on mount");
-      const { data, error } = await supabase.auth.getSession();
-      console.log("📱 Index - Initial session check result:", {
-        hasSession: !!data.session,
-        userId: data.session?.user?.id,
-        error: error?.message
-      });
-      
-      if (data.session) {
-        console.log("📱 Index - Session found on mount, user ID:", data.session.user.id);
-        navigate('/dashboard');
-      } else {
-        console.log("📱 Index - No session found on mount");
-        
-        // If we have hash parameters but no session, try to process them
-        if (window.location.hash && window.location.hash.includes('access_token')) {
-          debugHashParams();
-          processAuthHashParams();
-        }
-      }
-    };
-    
-    checkSessionAndLog();
-  }, [navigate]);
+      })();
+    }
+  }, [location, toast, navigate]);
 };

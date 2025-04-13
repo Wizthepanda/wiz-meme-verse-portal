@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ParallaxClouds from "@/components/ParallaxClouds";
 import FloatingElements from "@/components/FloatingElements";
 import LoadingScreen from "@/components/dashboard/LoadingScreen";
@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useDebugInfo } from "@/hooks/useDebugInfo";
 
-// Import the new components
+// Import the components
 import HeaderSection from "@/components/home/HeaderSection";
 import TwitterLoginButton from "@/components/home/TwitterLoginButton";
 import DebugPanel from "@/components/home/DebugPanel";
@@ -16,12 +16,24 @@ import Footer from "@/components/home/Footer";
 const Index = () => {
   const { isLoading } = useAuth();
   const [authLoading, setAuthLoading] = useState(false);
+  const [initialCheckComplete, setInitialCheckComplete] = useState(false);
   
   // Use custom hooks for auth redirects and debug info
   useAuthRedirect();
   const debugInfo = useDebugInfo();
   
-  if (isLoading || authLoading) {
+  // Ensure we only show loading screen briefly during initial load
+  useEffect(() => {
+    // Set initial check complete after a short delay
+    const timer = setTimeout(() => {
+      setInitialCheckComplete(true);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Show loading screen only during initial load or explicit auth loading
+  if ((isLoading && !initialCheckComplete) || authLoading) {
     return <LoadingScreen />;
   }
   
