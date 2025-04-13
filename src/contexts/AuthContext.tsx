@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,14 +29,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       try {
         console.log("AuthContext - Initializing auth state...");
-        console.log("AuthContext - Current URL:", window.location.href);
         
         // IMPORTANT: Set up auth state change listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("AUTH STATE CHANGED - EVENT:", event);
-            console.log("AUTH STATE CHANGED - SESSION:", newSession?.user?.id || "NO SESSION");
-            console.log("AUTH STATE CHANGED - URL:", window.location.href);
             
             if (mounted) {
               // Update state with new session information
@@ -71,11 +67,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         );
         
-        console.log("Auth state change listener registered");
-        
         // THEN check for existing session
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        console.log("Current session check:", currentSession?.user?.id || "No session");
         
         if (sessionError) {
           console.error("Session retrieval error:", sessionError);
@@ -113,7 +106,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }, 2000);
         
         return () => {
-          console.log("Unsubscribing from auth state changes");
           subscription.unsubscribe();
         };
       } catch (error: any) {

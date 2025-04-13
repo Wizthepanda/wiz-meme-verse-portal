@@ -5,12 +5,10 @@ import FloatingElements from "@/components/FloatingElements";
 import LoadingScreen from "@/components/dashboard/LoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { useDebugInfo } from "@/hooks/useDebugInfo";
 
 // Import the components
 import HeaderSection from "@/components/home/HeaderSection";
 import TwitterLoginButton from "@/components/home/TwitterLoginButton";
-import DebugPanel from "@/components/home/DebugPanel";
 import Footer from "@/components/home/Footer";
 
 const Index = () => {
@@ -18,9 +16,8 @@ const Index = () => {
   const [authLoading, setAuthLoading] = useState(false);
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
   
-  // Use custom hooks for auth redirects and debug info
+  // Use custom hooks for auth redirects
   useAuthRedirect();
-  const debugInfo = useDebugInfo();
   
   // Ensure we only show loading screen briefly during initial load
   useEffect(() => {
@@ -62,9 +59,6 @@ const Index = () => {
         
         {/* Twitter Auth Button */}
         <TwitterLoginButton onLoginStart={handleLoginStart} />
-        
-        {/* Debug Panel */}
-        <DebugPanel debugInfo={debugInfo} />
         
         {/* Footer */}
         <Footer />
