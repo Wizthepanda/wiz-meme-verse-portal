@@ -6,7 +6,11 @@ import CloudButton from "@/components/CloudButton";
 import { playSoundEffect } from "@/utils/soundEffects";
 import { supabase, debugHashParams } from "@/integrations/supabase/client";
 
-const TwitterLoginButton = () => {
+interface TwitterLoginButtonProps {
+  onLoginStart?: () => void;
+}
+
+const TwitterLoginButton = ({ onLoginStart }: TwitterLoginButtonProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [authLoading, setAuthLoading] = useState(false);
@@ -42,12 +46,18 @@ const TwitterLoginButton = () => {
       playSoundEffect('squish');
       
       setAuthLoading(true);
+      // Let parent know we're starting auth
+      if (onLoginStart) onLoginStart();
+      
       setLastError(null);
       console.log("🐦 Twitter auth - Starting authentication flow");
       
       // Get the current URL's origin for the redirect
       const origin = window.location.origin;
-      const redirectTo = `${origin}/auth-status`; // Always redirect to auth status for reliability
+      
+      // For reliability, always redirect to auth-status for debugging first
+      // This helps diagnose any issues with the authentication flow
+      const redirectTo = `${origin}/auth-status`; 
       console.log("🐦 Twitter auth - Redirect URL:", redirectTo);
       
       // Clear any hash fragments or auth params from the current URL
@@ -94,6 +104,14 @@ const TwitterLoginButton = () => {
         variant: "destructive",
       });
       setAuthLoading(false);
+      
+      // Reset parent loading state if needed
+      if (onLoginStart) {
+        setTimeout(() => {
+          // Reset parent component's loading state after a delay
+          onLoginStart();
+        }, 1000);
+      }
     }
   };
 

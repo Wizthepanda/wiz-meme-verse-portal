@@ -29,7 +29,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(true);
       
       try {
-        console.log("Initializing auth state...");
+        console.log("AuthContext - Initializing auth state...");
+        console.log("AuthContext - Current URL:", window.location.href);
         
         // IMPORTANT: Set up auth state change listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -85,6 +86,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.log("Existing session found, updating state");
           setSession(currentSession);
           setUser(currentSession.user);
+          
+          // Make sure to set loading to false 
           setIsLoading(false);
         } else {
           console.log("No existing session found");
@@ -104,11 +107,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Always set loading to false after a timeout, just in case
         setTimeout(() => {
           if (mounted) {
+            console.log("Auth - Setting loading to false after timeout");
             setIsLoading(false);
           }
-        }, 1000);
+        }, 2000);
         
         return () => {
+          console.log("Unsubscribing from auth state changes");
           subscription.unsubscribe();
         };
       } catch (error: any) {

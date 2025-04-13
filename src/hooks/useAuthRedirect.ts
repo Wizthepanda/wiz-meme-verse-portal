@@ -26,7 +26,7 @@ export const useAuthRedirect = () => {
       });
       
       // Navigate to auth status page for debugging
-      navigate('/auth-status');
+      navigate('/auth-status', { replace: true });
     }
   }, [location.search, toast, navigate]);
 
@@ -40,7 +40,7 @@ export const useAuthRedirect = () => {
 
   // Process auth hash parameters on load
   useEffect(() => {
-    console.log("📱 Index - Current location:", location.pathname);
+    console.log("📱 useAuthRedirect - Current location:", location.pathname);
     console.log("📱 Current URL:", window.location.href);
     
     // If we're already on the dashboard or auth pages, don't process hash
@@ -68,12 +68,20 @@ export const useAuthRedirect = () => {
               window.history.replaceState(null, document.title, window.location.pathname);
             }
             
+            // Show a success toast
+            toast({
+              title: "Successfully Connected!",
+              description: "Welcome to the Wizverse, meme lord!",
+            });
+            
             // Navigate to dashboard
-            navigate('/dashboard', { replace: true });
+            setTimeout(() => {
+              navigate('/dashboard', { replace: true });
+            }, 500); // Small delay to ensure state is updated
           } else {
             // If processing failed, go to auth status page
             console.log("🎯 Failed to establish session from hash, going to auth status");
-            navigate('/auth-status');
+            navigate('/auth-status', { replace: true });
           }
         } catch (err) {
           console.error("🎯 Exception during auth hash processing:", err);
@@ -83,7 +91,7 @@ export const useAuthRedirect = () => {
             variant: "destructive",
           });
           
-          navigate('/auth-status');
+          navigate('/auth-status', { replace: true });
         }
       })();
     }

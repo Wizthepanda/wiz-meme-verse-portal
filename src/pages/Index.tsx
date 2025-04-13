@@ -14,7 +14,7 @@ import DebugPanel from "@/components/home/DebugPanel";
 import Footer from "@/components/home/Footer";
 
 const Index = () => {
-  const { isLoading } = useAuth();
+  const { isLoading, user } = useAuth();
   const [authLoading, setAuthLoading] = useState(false);
   const [initialCheckComplete, setInitialCheckComplete] = useState(false);
   
@@ -24,18 +24,29 @@ const Index = () => {
   
   // Ensure we only show loading screen briefly during initial load
   useEffect(() => {
+    console.log("Index - Initial loading effect");
     // Set initial check complete after a short delay
     const timer = setTimeout(() => {
       setInitialCheckComplete(true);
+      console.log("Index - Initial check complete");
     }, 2000);
     
     return () => clearTimeout(timer);
   }, []);
   
+  // Handler for Twitter login to track loading state
+  const handleLoginStart = () => {
+    console.log("Index - Setting auth loading to true");
+    setAuthLoading(true);
+  };
+
   // Show loading screen only during initial load or explicit auth loading
   if ((isLoading && !initialCheckComplete) || authLoading) {
+    console.log("Index - Showing loading screen", { isLoading, initialCheckComplete, authLoading });
     return <LoadingScreen />;
   }
+  
+  console.log("Index - Rendering main content", { user: user?.id, isLoading });
   
   // Render the main UI
   return (
@@ -50,7 +61,7 @@ const Index = () => {
         <HeaderSection />
         
         {/* Twitter Auth Button */}
-        <TwitterLoginButton />
+        <TwitterLoginButton onLoginStart={handleLoginStart} />
         
         {/* Debug Panel */}
         <DebugPanel debugInfo={debugInfo} />

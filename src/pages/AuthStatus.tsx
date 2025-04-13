@@ -16,11 +16,15 @@ const AuthStatus = () => {
     hash: window.location.hash, 
     search: window.location.search 
   });
-  const [showDevInfo, setShowDevInfo] = useState(false);
+  const [showDevInfo, setShowDevInfo] = useState(true);
+  const [processingHash, setProcessingHash] = useState(false);
 
   useEffect(() => {
+    console.log("AuthStatus - Component mounted, current URL:", window.location.href);
+    
     // Get detailed session info
     const getSessionDetails = async () => {
+      console.log("AuthStatus - Getting session details");
       const { data, error } = await supabase.auth.getSession();
       setDetailedSession({
         hasSession: !!data.session,
@@ -32,10 +36,20 @@ const AuthStatus = () => {
     };
     
     getSessionDetails();
+    
+    // Process hash params if present
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      setProcessingHash(true);
+      console.log("AuthStatus - Access token found in hash, processing");
+      
+      // Let auth redirect hook handle the processing
+      // We will get redirected to dashboard if successful
+    }
   }, [user, session]);
 
   const handleCheckAuth = async () => {
     try {
+      console.log("AuthStatus - Manually checking auth status");
       const { data, error } = await supabase.auth.getSession();
       setDetailedSession({
         hasSession: !!data.session,
@@ -49,10 +63,21 @@ const AuthStatus = () => {
         hash: window.location.hash, 
         search: window.location.search 
       });
+      
+      if (data.session) {
+        console.log("Session found during manual check:", data.session.user.id);
+      } else {
+        console.log("No session found during manual check");
+      }
     } catch (e: any) {
       console.error("Error checking auth:", e);
       setDetailedSession({ error: e.message });
     }
+  };
+
+  // Try again button handler
+  const handleTryAgain = () => {
+    navigate('/', { replace: true });
   };
 
   return (
@@ -69,10 +94,12 @@ const AuthStatus = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isLoading ? (
+          {isLoading || processingHash ? (
             <div className="text-center p-4">
               <div className="animate-spin h-6 w-6 border-2 border-wiz-purple border-t-transparent rounded-full mx-auto"></div>
-              <p className="mt-2">Checking authentication status...</p>
+              <p className="mt-2">
+                {processingHash ? "Processing authentication token..." : "Checking authentication status..."}
+              </p>
             </div>
           ) : (
             <>
@@ -127,6 +154,13 @@ const AuthStatus = () => {
                 </Button>
                 
                 <Button 
+                  onClick={handleTryAgain} 
+                  className="w-full bg-wiz-purple hover:bg-wiz-purple/90"
+                >
+                  Try Again
+                </Button>
+                
+                <Button 
                   onClick={() => navigate('/dashboard')} 
                   className="w-full bg-wiz-purple hover:bg-wiz-purple/90"
                 >
@@ -168,7 +202,7 @@ const AuthStatus = () => {
                 <strong>Supabase Key:</strong> {SUPABASE_CONFIG.key}
               </p>
               <Alert className="mt-4">
-                <AlertTitle>Redirect URLs Check</AlertTitle>
+                <AlertTitle>Important: Redirect URLs Check</AlertTitle>
                 <AlertDescription>
                   Ensure these URLs are added to your Supabase redirect URLs:
                   <ul className="list-disc pl-5 mt-2 text-xs">
@@ -178,6 +212,9 @@ const AuthStatus = () => {
                     <li>{window.location.origin}/auth-status</li>
                     <li>{window.location.origin}/auth-debug</li>
                   </ul>
+                  <div className="mt-2 text-sm font-semibold">
+                    The most common issue is missing redirect URLs in your Supabase configuration.
+                  </div>
                 </AlertDescription>
               </Alert>
             </CardContent>
