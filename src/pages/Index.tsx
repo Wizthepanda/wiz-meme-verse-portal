@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ParallaxClouds from "@/components/ParallaxClouds";
@@ -10,7 +11,7 @@ import LoadingScreen from "@/components/dashboard/LoadingScreen";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { playSoundEffect } from "@/utils/soundEffects";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkCurrentSession, debugHashParams } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -18,25 +19,49 @@ const Index = () => {
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
   const [authLoading, setAuthLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
-  // Debug auth state and URL params
+  // Debug auth state and URL params with enhanced logging
   useEffect(() => {
     console.log("📱 Index - Component mounted");
     console.log("📱 Index - Current URL:", window.location.href);
     console.log("📱 Index - Auth state:", { user: user?.id, isLoading });
     console.log("📱 Index - URL query params:", location.search);
     console.log("📱 Index - URL hash:", location.hash);
+    
+    // Log Supabase configuration
+    console.log("📱 Index - Supabase URL:", (supabase as any).supabaseUrl);
+    console.log("📱 Index - Supabase key (first 10):", (supabase as any).supabaseKey?.substring(0, 10) + "...");
+    
+    // Collect debug info
+    const info = {
+      url: window.location.href,
+      user: user?.id,
+      isLoading,
+      hash: location.hash,
+      supabaseUrl: (supabase as any).supabaseUrl,
+      supabaseKeyStart: (supabase as any).supabaseKey?.substring(0, 10) + "..."
+    };
+    setDebugInfo(info);
+    
   }, [user, isLoading, location]);
   
-  // Check for auth hash in URL
+  // Add more aggressive hash parameter checking
   useEffect(() => {
-    const checkHashParams = async () => {
+    const checkHashParamsAggressively = async () => {
+      console.log("📱 Index - Aggressively checking for hash parameters...");
+      
+      // Custom debug function to parse hash directly
+      debugHashParams();
+      
       // Check if URL contains an access token hash parameter (#access_token=...)
       if (window.location.hash && window.location.hash.includes('access_token')) {
         console.log("🎯 ACCESS TOKEN DETECTED IN URL HASH:", window.location.hash);
         
         try {
           console.log("🎯 Beginning Supabase processing of auth hash");
+          console.log("🎯 Auth configuration:", supabase.auth.getAutoRefreshToken(), supabase.auth.detectSessionInUrl);
+          
           // The Supabase client will automatically parse the hash
           const { data, error } = await supabase.auth.getSession();
           
@@ -53,6 +78,33 @@ const Index = () => {
           if (!data.session && data.session?.user) {
             console.warn("🎯 Warning: User exists but no session after hash processing");
           }
+          
+          // Manually try to exchange the token
+          if (!data.session && window.location.hash.includes('access_token')) {
+            console.log("🎯 No session after automatic processing, trying manual approach");
+            try {
+              const hashParams = new URLSearchParams(window.location.hash.substring(1));
+              const accessToken = hashParams.get('access_token');
+              
+              if (accessToken) {
+                console.log("🎯 Manually extracted access token (first 10):", accessToken.substring(0, 10) + "...");
+                
+                // Try a different approach to set the session manually
+                const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: ''
+                });
+                
+                console.log("🎯 Manual setSession result:", { 
+                  success: !!sessionData.session,
+                  error: sessionError,
+                  userId: sessionData.session?.user?.id
+                });
+              }
+            } catch (manualError) {
+              console.error("🎯 Error during manual token exchange:", manualError);
+            }
+          }
         } catch (err) {
           console.error("🎯 Error processing auth hash:", err);
           toast({
@@ -66,8 +118,8 @@ const Index = () => {
       }
     };
     
-    checkHashParams();
-  }, [toast]);
+    checkHashParamsAggressively();
+  }, [toast, location.hash]);
   
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -119,24 +171,46 @@ const Index = () => {
     }
   };
   
-  // Additional helper to manually check session status
+  // Additional helper to manually check session status with more details
   const checkSessionStatus = async () => {
     try {
       console.log("🔍 Manual session check - Starting");
       const { data, error } = await supabase.auth.getSession();
-      console.log("🔍 Manual session check - Result:", { session: !!data.session, error });
+      console.log("🔍 Manual session check - Result:", { 
+        session: !!data.session, 
+        error,
+        provider: data.session?.user?.app_metadata?.provider
+      });
       if (data.session) {
         console.log("🔍 Manual session check - User ID:", data.session.user?.id);
+        console.log("🔍 Manual session check - Access token (first 10):", 
+          data.session.access_token.substring(0, 10) + "...");
       }
+      
+      // Show debug toast with session info
+      toast({
+        title: "Session Status",
+        description: `Session exists: ${!!data.session}, User ID: ${data.session?.user?.id || 'None'}`,
+      });
+      
     } catch (e) {
       console.error("🔍 Manual session check - Error:", e);
+      toast({
+        title: "Session Check Error",
+        description: `Error: ${e instanceof Error ? e.message : String(e)}`,
+        variant: "destructive",
+      });
     }
   };
   
-  // Run this once on component mount
+  // Run this once on component mount with enhanced logging
   useEffect(() => {
-    checkSessionStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const checkSessionAndLog = async () => {
+      const result = await checkCurrentSession();
+      console.log("📱 Index - Initial session check result:", result);
+    };
+    
+    checkSessionAndLog();
   }, []);
   
   if (isLoading || authLoading) {
@@ -179,15 +253,43 @@ const Index = () => {
           CONNECT TWITTER & LET'S GOOO!
         </CloudButton>
         
-        {/* Debug button - only visible during development */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Debug buttons - enhanced for troubleshooting */}
+        <div className="flex flex-col items-center mt-4 space-y-2">
           <button 
             onClick={checkSessionStatus}
-            className="mt-4 text-sm text-wiz-purple underline"
+            className="text-sm text-wiz-purple underline"
           >
             Debug: Check Session
           </button>
-        )}
+          
+          <button 
+            onClick={() => {
+              const hashInfo = debugHashParams();
+              toast({
+                title: "URL Hash Check",
+                description: location.hash ? "Hash parameters found" : "No hash parameters",
+              });
+            }}
+            className="text-sm text-wiz-purple underline"
+          >
+            Debug: Check URL Hash
+          </button>
+          
+          {debugInfo && (
+            <button
+              onClick={() => {
+                toast({
+                  title: "Debug Info",
+                  description: "Check console for detailed debug information",
+                });
+                console.log("📊 DEBUG INFO:", debugInfo);
+              }}
+              className="text-sm text-wiz-purple underline"
+            >
+              Show Debug Info
+            </button>
+          )}
+        </div>
         
         {/* Fine print */}
         <p className="mt-6 text-sm text-wiz-dark flex items-center">

@@ -6,8 +6,9 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://fufkgbehjidcoytcrdlo.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1ZmtnYmVoamlkY295dGNyZGxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyOTU0NTksImV4cCI6MjA1OTg3MTQ1OX0.dds_sB2HNUK6gSaFZCk_ghl5OtOsMCseXIGyvTGWqnI";
 
-console.log('SUPABASE INITIALIZATION - URL:', SUPABASE_URL);
-console.log('SUPABASE INITIALIZATION - KEY (first 10 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 10) + '...');
+console.log('✅ SUPABASE INITIALIZATION - URL:', SUPABASE_URL);
+console.log('✅ SUPABASE INITIALIZATION - KEY (first 10 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 10) + '...');
+console.log('✅ SUPABASE INITIALIZATION - KEY (last 10 chars):', '...' + SUPABASE_PUBLISHABLE_KEY.substring(SUPABASE_PUBLISHABLE_KEY.length - 10));
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -26,42 +27,41 @@ export const supabase = createClient<Database>(
   }
 );
 
-console.log('Supabase client potentially initialized:', supabase);
+console.log('✅ Supabase client initialized:', supabase);
 
 // Add a debug listener for auth state changes with more detailed logging
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log("🚨 ONAUTHSTATECHANGE FIRED! 🚨", event);
-  console.log("🔑 SESSION USER ID:", session?.user?.id);
-  console.log("📊 FULL SESSION DATA:", JSON.stringify(session, null, 2));
+  console.log("🔍 ONAUTHSTATECHANGE FIRED! Event:", event);
+  console.log("🔍 SESSION OBJECT:", session);
   
-  // Log specific parts of the session to identify issues
   if (session) {
-    console.log("✅ Session exists with:");
-    console.log("- Access Token (first 10 chars):", session.access_token ? session.access_token.substring(0, 10) + '...' : 'MISSING');
-    console.log("- Refresh Token (exists):", !!session.refresh_token);
-    console.log("- Provider:", session.user?.app_metadata?.provider);
-    console.log("- User email:", session.user?.email);
+    console.log("🔍 USER ID:", session.user?.id);
+    console.log("🔍 ACCESS TOKEN (first 20 chars):", session.access_token ? (session.access_token.substring(0, 20) + '...') : 'MISSING');
+    console.log("🔍 REFRESH TOKEN (exists):", !!session.refresh_token);
+    console.log("🔍 PROVIDER:", session.user?.app_metadata?.provider);
+    console.log("🔍 User email:", session.user?.email);
   } else {
-    console.log("❌ Session is null/undefined");
+    console.log("🔍 SESSION IS NULL");
   }
   
   // Check for potential errors in user metadata
   if (session?.user?.user_metadata) {
-    console.log("👤 User metadata:", session.user.user_metadata);
+    console.log("🔍 User metadata:", session.user.user_metadata);
   }
 });
 
 // Log initial session on load with more details
 supabase.auth.getSession().then(({ data, error }) => {
-  console.log("Initial Session Check - Session exists:", !!data.session);
-  console.log("Initial Session Check - User ID:", data.session?.user?.id);
+  console.log("✅ Initial Session Check - Session exists:", !!data.session);
+  console.log("✅ Initial Session Check - User ID:", data.session?.user?.id);
   
   if (error) {
     console.error("⚠️ Initial session error:", error);
   }
   
   if (data.session) {
-    console.log("Initial session access token (first 10):", data.session.access_token.substring(0, 10) + '...');
+    console.log("✅ Initial session access token (first 20):", data.session.access_token.substring(0, 20) + '...');
+    console.log("✅ Initial session user provider:", data.session.user?.app_metadata?.provider);
   }
 });
 
@@ -70,26 +70,72 @@ const originalFetch = window.fetch;
 window.fetch = function(input, init) {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
   
-  if (url.includes('supabase') && url.includes('token')) {
-    console.log('🌐 NETWORK: Supabase token request detected:', url);
+  if (url.includes('supabase') && (url.includes('token') || url.includes('callback'))) {
+    console.log('🌐 NETWORK: Supabase auth request detected:', url);
     console.log('🌐 NETWORK: Request headers:', init?.headers);
+    console.log('🌐 NETWORK: Request method:', init?.method);
+    console.log('🌐 NETWORK: Request body:', init?.body);
     
     return originalFetch(input, init).then(response => {
-      console.log(`🌐 NETWORK: Supabase token response status: ${response.status}`);
+      console.log(`🌐 NETWORK: Supabase auth response status: ${response.status}`);
       
       // Clone the response to log its body (without consuming the original)
-      response.clone().json().then(data => {
-        console.log('🌐 NETWORK: Supabase token response body:', data);
+      response.clone().text().then(text => {
+        try {
+          const data = JSON.parse(text);
+          console.log('🌐 NETWORK: Supabase auth response body:', data);
+        } catch (e) {
+          console.log('🌐 NETWORK: Supabase auth response text:', text);
+        }
       }).catch(e => {
-        console.log('🌐 NETWORK: Could not parse token response as JSON');
+        console.log('🌐 NETWORK: Could not parse auth response');
       });
       
       return response;
     }).catch(error => {
-      console.error('🌐 NETWORK: Supabase token request failed:', error);
+      console.error('🌐 NETWORK: Supabase auth request failed:', error);
       throw error;
     });
   }
   
   return originalFetch(input, init);
 };
+
+// Add session check function
+export const checkCurrentSession = async () => {
+  console.log("🧪 Manual session check - Starting");
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    console.log("🧪 Current session status:", { 
+      hasSession: !!data.session, 
+      error, 
+      userId: data.session?.user?.id,
+      provider: data.session?.user?.app_metadata?.provider
+    });
+    return { session: data.session, error };
+  } catch (e) {
+    console.error("🧪 Session check error:", e);
+    return { session: null, error: e };
+  }
+};
+
+// Debug function to manually check token in URL
+export const debugHashParams = () => {
+  const hash = window.location.hash;
+  if (hash) {
+    console.log("🧪 URL HASH DETECTED:", hash);
+    // Parse hash parameters
+    const hashParams = new URLSearchParams(hash.substring(1));
+    console.log("🧪 Access token exists in hash:", hashParams.has("access_token"));
+    if (hashParams.has("access_token")) {
+      const token = hashParams.get("access_token");
+      console.log("🧪 Access token length:", token?.length);
+      console.log("🧪 Access token first 10 chars:", token?.substring(0, 10) + "...");
+    }
+  } else {
+    console.log("🧪 No hash parameters in URL");
+  }
+};
+
+// Run hash param check on load
+debugHashParams();
