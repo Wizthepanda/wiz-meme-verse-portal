@@ -12,6 +12,7 @@ const TwitterLoginButton = () => {
   const { toast } = useToast();
   const [authLoading, setAuthLoading] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const handleTwitterAuth = async () => {
     try {
@@ -19,6 +20,7 @@ const TwitterLoginButton = () => {
       playSoundEffect('squish');
       
       setAuthLoading(true);
+      setLastError(null);
       console.log("🐦 Twitter auth - Starting authentication flow");
       
       // Get the current URL's origin for the redirect
@@ -31,6 +33,18 @@ const TwitterLoginButton = () => {
       console.log("🐦 Twitter auth - Supabase Key (first 10):", (supabase as any).supabaseKey?.substring(0, 10) + '...');
       console.log("🐦 Twitter auth - Current URL:", window.location.href);
       
+      // Check if there's an existing session before starting new auth
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("🐦 Session check error:", sessionError);
+      }
+      if (session) {
+        console.log("🐦 Existing session found, redirecting to dashboard");
+        navigate('/dashboard');
+        setAuthLoading(false);
+        return;
+      }
+      
       console.log("🐦 Twitter auth - Calling supabase.auth.signInWithOAuth");
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
@@ -42,6 +56,7 @@ const TwitterLoginButton = () => {
       
       if (error) {
         console.error("🐦 Twitter auth error during signInWithOAuth:", error);
+        setLastError(error.message);
         throw error;
       }
       
@@ -49,9 +64,20 @@ const TwitterLoginButton = () => {
       console.log("🐦 Twitter auth - Provider URL:", data.url);
       console.log("🐦 Twitter auth - Should redirect now via Supabase Auth");
       
+      // If we get here, we should be redirecting to Twitter
+      // But let's add a timeout just in case something goes wrong
+      setTimeout(() => {
+        // If we're still here after 5 seconds, something went wrong
+        if (data.url) {
+          console.log("🐦 Manual redirect to provider URL after timeout");
+          window.location.href = data.url;
+        }
+      }, 5000);
+      
     } catch (error: any) {
       console.error("🐦 Twitter auth error:", error);
       console.error("🐦 Twitter auth error stack:", error.stack);
+      setLastError(error.message);
       toast({
         title: "Twitter Authentication Failed",
         description: error.message || "Could not connect to Twitter. Please try again.",
@@ -81,6 +107,12 @@ const TwitterLoginButton = () => {
       {debugMode && (
         <div className="text-xs text-gray-500 mt-1">
           Debug mode enabled. Will redirect to /auth-debug
+        </div>
+      )}
+      
+      {lastError && (
+        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md text-xs text-red-600">
+          <strong>Last error:</strong> {lastError}
         </div>
       )}
     </div>

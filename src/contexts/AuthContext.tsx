@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
+  authError: string | null;
   signOut: () => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Initialize auth state
@@ -39,6 +41,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               // Update state with new session information
               setSession(newSession);
               setUser(newSession?.user ?? null);
+              setAuthError(null); // Clear any previous errors on successful auth change
               
               // Show welcome toast on sign in
               if (event === 'SIGNED_IN') {
@@ -62,8 +65,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log("Auth state change listener registered");
         
         // THEN check for existing session
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         console.log("Current session check:", currentSession?.user?.id || "No session");
+        
+        if (sessionError) {
+          console.error("Session retrieval error:", sessionError);
+          setAuthError(`Session retrieval failed: ${sessionError.message}`);
+        }
         
         if (currentSession && mounted) {
           console.log("Existing session found, updating state");
@@ -81,10 +89,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return () => {
           subscription.unsubscribe();
         };
-      } catch (error) {
+      } catch (error: any) {
         console.error("Auth initialization error:", error);
         if (mounted) {
           setIsLoading(false);
+          setAuthError(`Authentication initialization error: ${error.message}`);
           toast({
             title: "Authentication Error",
             description: "There was a problem initializing your session. Please try refreshing the page.",
@@ -108,8 +117,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
       setUser(null);
       setSession(null);
-    } catch (error) {
+      setAuthError(null);
+    } catch (error: any) {
       console.error("Sign out error:", error);
+      setAuthError(`Sign out error: ${error.message}`);
       toast({
         title: "Sign Out Error",
         description: "There was a problem signing out. Please try again.",
@@ -124,6 +135,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       session,
       user,
       isLoading,
+      authError,
       signOut
     }}>
       {children}

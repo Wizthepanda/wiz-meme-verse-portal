@@ -1,14 +1,31 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, debugHashParams } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useAuthRedirect = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user, isLoading } = useAuth();
+
+  // Check for auth errors in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    
+    if (error) {
+      console.error("Auth redirect error:", error, errorDescription);
+      toast({
+        title: "Authentication Error",
+        description: errorDescription || "There was a problem during authentication.",
+        variant: "destructive",
+      });
+    }
+  }, [location.search, toast]);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -37,7 +54,8 @@ export const useAuthRedirect = () => {
             detectSessionInUrl: true 
           });
           
-          // The Supabase client will automatically parse the hash
+          // Process the hash - this should update the session
+          // First try the standard approach
           const { data, error } = await supabase.auth.getSession();
           
           console.log("🎯 Get session after hash detection - Success:", !!data.session);
@@ -57,53 +75,21 @@ export const useAuthRedirect = () => {
             return;
           }
           
-          // Check if we have a user but no session - could indicate a processing issue
-          if (!data.session && data.session?.user) {
-            console.warn("🎯 Warning: User exists but no session after hash processing");
-          }
-          
-          // Manually try to exchange the token
-          if (!data.session && window.location.hash.includes('access_token')) {
-            console.log("🎯 No session after automatic processing, trying manual approach");
-            try {
-              const hashParams = new URLSearchParams(window.location.hash.substring(1));
-              const accessToken = hashParams.get('access_token');
-              
-              if (accessToken) {
-                console.log("🎯 Manually extracted access token (first 10):", accessToken.substring(0, 10) + "...");
-                
-                // Try a different approach to set the session manually
-                const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                  access_token: accessToken,
-                  refresh_token: ''
-                });
-                
-                console.log("🎯 Manual setSession result:", { 
-                  success: !!sessionData.session,
-                  error: sessionError,
-                  userId: sessionData.session?.user?.id
-                });
-                
-                if (sessionData.session && sessionData.session.user) {
-                  console.log("🎯 Manual session established with user ID:", sessionData.session.user.id);
-                  console.log("🎯 Redirecting to dashboard after manual session setup...");
-                  navigate('/dashboard');
-                }
-              }
-            } catch (manualError) {
-              console.error("🎯 Error during manual token exchange:", manualError);
-            }
-          }
-        } catch (err) {
+          // If we get here, we couldn't process the hash properly
+          // Let's try a direct approach to fetch and navigate to auth status page
+          console.log("🎯 Standard approach failed, trying auth status page...");
+          navigate('/auth-status');
+        } catch (err: any) {
           console.error("🎯 Error processing auth hash:", err);
           toast({
             title: "Authentication Error",
-            description: "There was a problem processing your login. Please try again.",
+            description: "There was a problem processing your login. Please try again or check auth status.",
             variant: "destructive",
           });
+          
+          // Navigate to auth status page for detailed diagnostics
+          navigate('/auth-status');
         }
-      } else {
-        console.log("📱 No auth hash detected in URL");
       }
     };
     

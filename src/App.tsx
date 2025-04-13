@@ -14,6 +14,7 @@ import MagicMissions from "./pages/MagicMissions";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import AuthDebug from "./pages/AuthDebug";
+import AuthStatus from "./pages/AuthStatus";
 
 // Create a QueryClient instance within the component scope
 const App = () => {
@@ -36,6 +37,7 @@ const App = () => {
                 <Route path="/magic-missions" element={<MagicMissions />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth-debug" element={<AuthDebug />} />
+                <Route path="/auth-status" element={<AuthStatus />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
