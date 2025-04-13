@@ -17,7 +17,6 @@ export const useAuthRedirect = () => {
     const errorDescription = params.get('error_description');
     
     if (error) {
-      console.error("Auth redirect error:", error, errorDescription);
       toast({
         title: "Authentication Error",
         description: errorDescription || "There was a problem during authentication.",
@@ -29,7 +28,6 @@ export const useAuthRedirect = () => {
   // Redirect to dashboard if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      console.log("📱 User is logged in, redirecting to dashboard", user.id);
       navigate('/dashboard', { replace: true });
     }
   }, [user, navigate, isLoading]);
@@ -43,8 +41,6 @@ export const useAuthRedirect = () => {
     
     // Process access token in hash if present
     if (window.location.hash && window.location.hash.includes('access_token')) {
-      console.log("🎯 Access token detected in URL hash");
-      
       // Clear hash from URL to prevent re-processing
       if (window.history && window.history.replaceState) {
         window.history.replaceState(null, document.title, window.location.pathname);
