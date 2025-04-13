@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserProfile, Profile } from "@/services/sparkleService";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextType {
   session: Session | null;
@@ -20,6 +21,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   // Fetch user profile when user changes
   const fetchProfile = async (userId: string) => {
@@ -68,9 +70,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             
           if (insertError) {
             console.error("Error creating new profile:", insertError);
+            toast({
+              title: "Profile Error",
+              description: "Could not create your profile. Please try again.",
+              variant: "destructive",
+            });
           } else {
             console.log("Created new profile successfully:", data);
             setProfile(data);
+            toast({
+              title: "Welcome, Wizard!",
+              description: "Your meme journey begins now. Start collecting sparkles!",
+            });
           }
         } catch (createError) {
           console.error("Failed to create profile:", createError);
@@ -101,8 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("AUTH STATE CHANGED - EVENT:", event);
-            console.log("AUTH STATE CHANGED - SESSION:", newSession?.user?.id);
-            console.log("AUTH STATE CHANGED - Full session data:", JSON.stringify(newSession, null, 2));
+            console.log("AUTH STATE CHANGED - SESSION:", newSession?.user?.id || "NO SESSION");
             
             if (mounted) {
               // Update state with new session information
@@ -111,7 +121,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               
               if (newSession?.user) {
                 console.log("User from auth change:", newSession.user.id);
-                console.log("User details:", JSON.stringify(newSession.user, null, 2));
                 
                 // Use setTimeout to prevent circular calls
                 setTimeout(() => {
@@ -119,8 +128,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     fetchProfile(newSession.user.id);
                   }
                 }, 0);
+                
+                // Show welcome toast on sign in
+                if (event === 'SIGNED_IN') {
+                  toast({
+                    title: "Successfully Connected!",
+                    description: "Welcome to the Wizverse, meme lord!",
+                  });
+                }
               } else {
                 setProfile(null);
+                
+                // Show logout toast on sign out
+                if (event === 'SIGNED_OUT') {
+                  toast({
+                    title: "Logged Out",
+                    description: "Come back soon for more meme magic!",
+                  });
+                }
               }
             }
           }
@@ -130,7 +155,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // THEN check for existing session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Current session check:", currentSession?.user?.id);
+        console.log("Current session check:", currentSession?.user?.id || "No session");
         
         if (currentSession && mounted) {
           console.log("Existing session found, updating state");
@@ -156,6 +181,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error("Auth initialization error:", error);
         if (mounted) {
           setIsLoading(false);
+          toast({
+            title: "Authentication Error",
+            description: "There was a problem initializing your session. Please try refreshing the page.",
+            variant: "destructive",
+          });
         }
       }
     };
@@ -165,7 +195,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [toast]);
 
   // Sign out function
   const signOut = async () => {
@@ -177,6 +207,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setProfile(null);
     } catch (error) {
       console.error("Sign out error:", error);
+      toast({
+        title: "Sign Out Error",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive",
+      });
       throw error;
     }
   };

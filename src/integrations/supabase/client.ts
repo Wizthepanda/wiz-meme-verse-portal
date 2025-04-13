@@ -22,17 +22,17 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'implicit'
+      flowType: 'pkce'  // Change from 'implicit' to 'pkce' for more secure auth flow
     }
   }
 );
 
-console.log('✅ Supabase client initialized:', supabase);
+console.log('✅ Supabase client initialized with flowType: pkce');
 
 // Add a debug listener for auth state changes with more detailed logging
 supabase.auth.onAuthStateChange((event, session) => {
   console.log("🔍 ONAUTHSTATECHANGE FIRED! Event:", event);
-  console.log("🔍 SESSION OBJECT:", session);
+  console.log("🔍 SESSION OBJECT:", session ? "SESSION EXISTS" : "SESSION IS NULL");
   
   if (session) {
     console.log("🔍 USER ID:", session.user?.id);
@@ -40,6 +40,12 @@ supabase.auth.onAuthStateChange((event, session) => {
     console.log("🔍 REFRESH TOKEN (exists):", !!session.refresh_token);
     console.log("🔍 PROVIDER:", session.user?.app_metadata?.provider);
     console.log("🔍 User email:", session.user?.email);
+    
+    // Force browser navigation to dashboard on successful login
+    if (event === 'SIGNED_IN' && window.location.pathname !== '/dashboard') {
+      console.log("🔍 Redirecting to dashboard after SIGNED_IN event");
+      window.location.href = '/dashboard';
+    }
   } else {
     console.log("🔍 SESSION IS NULL");
   }

@@ -60,8 +60,8 @@ const Index = () => {
         try {
           console.log("🎯 Beginning Supabase processing of auth hash");
           console.log("🎯 Auth configuration:", {
-            persistSession: true, // Default value
-            detectSessionInUrl: true // Default value
+            persistSession: true, 
+            detectSessionInUrl: true 
           });
           
           // The Supabase client will automatically parse the hash
@@ -74,6 +74,14 @@ const Index = () => {
           if (error) {
             console.error("🎯 Error processing auth hash:", error);
             throw error;
+          }
+          
+          // If session is established, redirect to dashboard
+          if (data.session && data.session.user) {
+            console.log("🎯 Session established with user ID:", data.session.user.id);
+            console.log("🎯 Redirecting to dashboard...");
+            navigate('/dashboard');
+            return;
           }
           
           // Check if we have a user but no session - could indicate a processing issue
@@ -102,6 +110,12 @@ const Index = () => {
                   error: sessionError,
                   userId: sessionData.session?.user?.id
                 });
+                
+                if (sessionData.session && sessionData.session.user) {
+                  console.log("🎯 Manual session established with user ID:", sessionData.session.user.id);
+                  console.log("🎯 Redirecting to dashboard after manual session setup...");
+                  navigate('/dashboard');
+                }
               }
             } catch (manualError) {
               console.error("🎯 Error during manual token exchange:", manualError);
@@ -121,7 +135,7 @@ const Index = () => {
     };
     
     checkHashParamsAggressively();
-  }, [toast, location.hash]);
+  }, [toast, location.hash, navigate]);
   
   // Redirect to dashboard if already logged in
   useEffect(() => {

@@ -38,9 +38,40 @@ const Auth = () => {
   // If user is already logged in, redirect to dashboard
   useEffect(() => {
     if (user) {
+      console.log("Auth - User already logged in, redirecting to dashboard");
       navigate('/dashboard');
     }
   }, [user, navigate]);
+  
+  // Listen for hash params if user comes to this page
+  useEffect(() => {
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log("Auth - Access token detected in URL hash, processing...");
+      
+      (async () => {
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          
+          console.log("Auth - Session check result:", {
+            hasSession: !!data.session,
+            error,
+            userId: data.session?.user?.id
+          });
+          
+          if (data.session && data.session.user) {
+            console.log("Auth - Session established, redirecting to dashboard");
+            navigate('/dashboard');
+          } else if (error) {
+            console.error("Auth - Error processing access token:", error);
+            setAuthError(error.message || "Failed to process authentication. Please try again.");
+          }
+        } catch (e) {
+          console.error("Auth - Exception during session processing:", e);
+          setAuthError("An unexpected error occurred. Please try again.");
+        }
+      })();
+    }
+  }, [navigate, location.hash]);
   
   const handleTwitterSignIn = async () => {
     setIsLoading(true);
@@ -49,21 +80,22 @@ const Auth = () => {
     try {
       // Generate absolute redirect URL using window.location.origin
       const redirectUrl = `${window.location.origin}/dashboard`;
-      console.log("Redirect URL:", redirectUrl);
+      console.log("Auth - Twitter sign in - Redirect URL:", redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
           redirectTo: redirectUrl,
+          scopes: 'tweet.read users.read',
         }
       });
       
       if (error) throw error;
       
-      console.log("Auth response:", data);
+      console.log("Auth - Twitter sign in response:", data);
       // Page will be redirected by Supabase Auth
     } catch (error: any) {
-      console.error("Sign in error:", error);
+      console.error("Auth - Sign in error:", error);
       setAuthError(error.message || "Could not connect to Twitter. Please try again.");
       toast({
         title: "Sign in failed",
