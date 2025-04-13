@@ -15,12 +15,12 @@ const DebugPanel = ({ debugInfo }: DebugPanelProps) => {
   const checkSessionStatus = async () => {
     try {
       console.log("🔍 Manual session check - Starting");
-      const { data, error } = await checkCurrentSession();
+      const { session, error } = await checkCurrentSession();
       
       // Show debug toast with session info
       toast({
         title: "Session Status",
-        description: `Session exists: ${!!data.session}, User ID: ${data.session?.user?.id || 'None'}`,
+        description: `Session exists: ${!!session}, User ID: ${session?.user?.id || 'None'}`,
       });
       
     } catch (e) {
