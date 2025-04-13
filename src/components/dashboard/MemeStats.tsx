@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Trophy, TrendingUp, ArrowUpRight, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { 
   fetchSparkleTransactions, 
   getNextRankInfo, 
@@ -17,7 +18,8 @@ interface MemeStatsProps {
 }
 
 const MemeStats: React.FC<MemeStatsProps> = ({ className }) => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { profile } = useProfile();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
