@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import CloudButton from "@/components/CloudButton";
 import { playSoundEffect } from "@/utils/soundEffects";
@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 const TwitterLoginButton = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const [authLoading, setAuthLoading] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
@@ -32,6 +31,7 @@ const TwitterLoginButton = () => {
       console.log("🐦 Twitter auth - Supabase URL:", (supabase as any).supabaseUrl);
       console.log("🐦 Twitter auth - Supabase Key (first 10):", (supabase as any).supabaseKey?.substring(0, 10) + '...');
       console.log("🐦 Twitter auth - Current URL:", window.location.href);
+      console.log("🐦 Twitter auth - Current origin:", origin);
       
       // Check if there's an existing session before starting new auth
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();

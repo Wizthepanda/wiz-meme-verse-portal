@@ -22,7 +22,7 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'pkce',  // Change from 'implicit' to 'pkce' for more secure auth flow
+      flowType: 'pkce',  // Use PKCE for more secure auth flow
       debug: true, // Enable debug mode for auth
     }
   }
@@ -49,10 +49,10 @@ supabase.auth.onAuthStateChange((event, session) => {
       const currentPath = window.location.pathname;
       console.log("🔍 Current path after SIGNED_IN event:", currentPath);
       
-      if (currentPath !== '/dashboard' && currentPath !== '/auth-debug') {
+      if (currentPath !== '/dashboard' && currentPath !== '/auth-debug' && currentPath !== '/auth-status') {
         console.log("🔍 Redirecting to dashboard after SIGNED_IN event");
         window.location.href = '/dashboard';
-      } else if (currentPath === '/auth-debug') {
+      } else if (currentPath === '/auth-debug' || currentPath === '/auth-status') {
         console.log("🔍 On debug page, not redirecting automatically");
       }
     }
