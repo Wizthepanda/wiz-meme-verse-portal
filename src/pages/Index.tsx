@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ParallaxClouds from "@/components/ParallaxClouds";
@@ -60,7 +59,10 @@ const Index = () => {
         
         try {
           console.log("🎯 Beginning Supabase processing of auth hash");
-          console.log("🎯 Auth configuration:", supabase.auth.getAutoRefreshToken(), supabase.auth.detectSessionInUrl);
+          console.log("🎯 Auth configuration:", {
+            persistSession: true, // Default value
+            detectSessionInUrl: true // Default value
+          });
           
           // The Supabase client will automatically parse the hash
           const { data, error } = await supabase.auth.getSession();

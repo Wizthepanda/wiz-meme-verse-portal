@@ -61,8 +61,10 @@ const Dashboard = () => {
       (async () => {
         try {
           console.log("🏠 Dashboard - Processing auth hash directly");
-          console.log("🏠 Dashboard - Auto refresh token setting:", supabase.auth.getAutoRefreshToken());
-          console.log("🏠 Dashboard - Detect session in URL setting:", (supabase.auth as any).detectSessionInUrl);
+          console.log("🏠 Dashboard - Auth configuration:", {
+            persistSession: true, // Default value
+            detectSessionInUrl: true // Default value
+          });
           
           const { data, error } = await supabase.auth.getSession();
           console.log("🏠 Dashboard - Hash processing result:", { 
