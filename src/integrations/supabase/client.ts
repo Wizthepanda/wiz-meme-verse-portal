@@ -22,12 +22,13 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'  // Change from 'implicit' to 'pkce' for more secure auth flow
+      flowType: 'pkce',  // Change from 'implicit' to 'pkce' for more secure auth flow
+      debug: true, // Enable debug mode for auth
     }
   }
 );
 
-console.log('✅ Supabase client initialized with flowType: pkce');
+console.log('✅ Supabase client initialized with flowType: pkce and debug mode enabled');
 
 // Add a debug listener for auth state changes with more detailed logging
 supabase.auth.onAuthStateChange((event, session) => {
@@ -40,19 +41,27 @@ supabase.auth.onAuthStateChange((event, session) => {
     console.log("🔍 REFRESH TOKEN (exists):", !!session.refresh_token);
     console.log("🔍 PROVIDER:", session.user?.app_metadata?.provider);
     console.log("🔍 User email:", session.user?.email);
+    console.log("🔍 User metadata:", session.user?.user_metadata);
+    console.log("🔍 App metadata:", session.user?.app_metadata);
     
     // Force browser navigation to dashboard on successful login
-    if (event === 'SIGNED_IN' && window.location.pathname !== '/dashboard') {
-      console.log("🔍 Redirecting to dashboard after SIGNED_IN event");
-      window.location.href = '/dashboard';
+    if (event === 'SIGNED_IN') {
+      const currentPath = window.location.pathname;
+      console.log("🔍 Current path after SIGNED_IN event:", currentPath);
+      
+      if (currentPath !== '/dashboard' && currentPath !== '/auth-debug') {
+        console.log("🔍 Redirecting to dashboard after SIGNED_IN event");
+        window.location.href = '/dashboard';
+      } else if (currentPath === '/auth-debug') {
+        console.log("🔍 On debug page, not redirecting automatically");
+      }
     }
   } else {
     console.log("🔍 SESSION IS NULL");
-  }
-  
-  // Check for potential errors in user metadata
-  if (session?.user?.user_metadata) {
-    console.log("🔍 User metadata:", session.user.user_metadata);
+    console.log("🔍 Current URL:", window.location.href);
+    console.log("🔍 Current path:", window.location.pathname);
+    console.log("🔍 Has hash:", !!window.location.hash);
+    console.log("🔍 Has search params:", !!window.location.search);
   }
 });
 
@@ -68,6 +77,7 @@ supabase.auth.getSession().then(({ data, error }) => {
   if (data.session) {
     console.log("✅ Initial session access token (first 20):", data.session.access_token.substring(0, 20) + '...');
     console.log("✅ Initial session user provider:", data.session.user?.app_metadata?.provider);
+    console.log("✅ Initial session user metadata:", data.session.user?.user_metadata);
   }
 });
 
@@ -76,14 +86,23 @@ const originalFetch = window.fetch;
 window.fetch = function(input, init) {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
   
-  if (url.includes('supabase') && (url.includes('token') || url.includes('callback'))) {
+  if (url.includes('supabase') && (url.includes('token') || url.includes('callback') || url.includes('auth'))) {
     console.log('🌐 NETWORK: Supabase auth request detected:', url);
     console.log('🌐 NETWORK: Request headers:', init?.headers);
     console.log('🌐 NETWORK: Request method:', init?.method);
-    console.log('🌐 NETWORK: Request body:', init?.body);
+    
+    if (init?.body) {
+      try {
+        const bodyContent = typeof init.body === 'string' ? init.body : 'non-string body';
+        console.log('🌐 NETWORK: Request body:', bodyContent.length > 1000 ? bodyContent.substring(0, 1000) + '...' : bodyContent);
+      } catch (e) {
+        console.log('🌐 NETWORK: Could not log request body');
+      }
+    }
     
     return originalFetch(input, init).then(response => {
       console.log(`🌐 NETWORK: Supabase auth response status: ${response.status}`);
+      console.log('🌐 NETWORK: Response headers:', response.headers);
       
       // Clone the response to log its body (without consuming the original)
       response.clone().text().then(text => {
@@ -138,10 +157,31 @@ export const debugHashParams = () => {
       console.log("🧪 Access token length:", token?.length);
       console.log("🧪 Access token first 10 chars:", token?.substring(0, 10) + "...");
     }
+    
+    // Log all hash parameters
+    hashParams.forEach((value, key) => {
+      console.log(`🧪 Hash parameter ${key}: ${key.includes('token') ? value.substring(0, 10) + '...' : value}`);
+    });
   } else {
     console.log("🧪 No hash parameters in URL");
+  }
+  
+  // Check search params too
+  const search = window.location.search;
+  if (search) {
+    console.log("🧪 URL SEARCH DETECTED:", search);
+    const searchParams = new URLSearchParams(search);
+    searchParams.forEach((value, key) => {
+      console.log(`🧪 Search parameter ${key}: ${value}`);
+    });
   }
 };
 
 // Run hash param check on load
 debugHashParams();
+
+// Export URL and key for debugging
+export const SUPABASE_CONFIG = {
+  url: SUPABASE_URL,
+  key: SUPABASE_PUBLISHABLE_KEY.substring(0, 10) + '...' + SUPABASE_PUBLISHABLE_KEY.substring(SUPABASE_PUBLISHABLE_KEY.length - 10)
+};

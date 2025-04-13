@@ -13,6 +13,7 @@ import MemeFeed from "./pages/MemeFeed";
 import MagicMissions from "./pages/MagicMissions";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import AuthDebug from "./pages/AuthDebug";
 
 // Create a QueryClient instance within the component scope
 const App = () => {
@@ -34,6 +35,7 @@ const App = () => {
                 <Route path="/meme-feed" element={<MemeFeed />} />
                 <Route path="/magic-missions" element={<MagicMissions />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth-debug" element={<AuthDebug />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
