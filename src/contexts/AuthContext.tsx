@@ -36,6 +36,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           (event, newSession) => {
             console.log("AUTH STATE CHANGED - EVENT:", event);
             console.log("AUTH STATE CHANGED - SESSION:", newSession?.user?.id || "NO SESSION");
+            console.log("AUTH STATE CHANGED - URL:", window.location.href);
             
             if (mounted) {
               // Update state with new session information
@@ -49,6 +50,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   title: "Successfully Connected!",
                   description: "Welcome to the Wizverse, meme lord!",
                 });
+                
+                // Force loading to false on sign in
+                setIsLoading(false);
               }
               
               // Show logout toast on sign out
@@ -57,6 +61,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   title: "Logged Out",
                   description: "Come back soon for more meme magic!",
                 });
+                
+                // Force loading to false on sign out
+                setIsLoading(false);
               }
             }
           }
@@ -79,12 +86,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(currentSession.user);
         } else {
           console.log("No existing session found");
+          
+          // Check for auth hash params
+          if (window.location.hash && window.location.hash.includes('access_token')) {
+            console.log("Auth hash params detected, processing...");
+            // Don't set loading to false yet, let the hash processing complete
+          } else {
+            // No hash params, nothing to wait for
+            if (mounted) {
+              setIsLoading(false);
+            }
+          }
         }
         
-        // Always set loading to false after initialization
-        if (mounted) {
-          setIsLoading(false);
-        }
+        // Always set loading to false after a timeout, just in case
+        setTimeout(() => {
+          if (mounted) {
+            setIsLoading(false);
+          }
+        }, 1500);
         
         return () => {
           subscription.unsubscribe();
@@ -113,11 +133,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Sign out function
   const signOut = async () => {
     try {
+      console.log("Signing out...");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
       setSession(null);
       setAuthError(null);
+      console.log("Sign out successful");
     } catch (error: any) {
       console.error("Sign out error:", error);
       setAuthError(`Sign out error: ${error.message}`);

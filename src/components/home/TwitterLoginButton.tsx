@@ -27,12 +27,6 @@ const TwitterLoginButton = () => {
       const redirectTo = debugMode ? `${origin}/auth-debug` : `${origin}/dashboard`;
       console.log("🐦 Twitter auth - Redirect URL:", redirectTo);
       
-      // Log important information for debugging
-      console.log("🐦 Twitter auth - Supabase URL:", (supabase as any).supabaseUrl);
-      console.log("🐦 Twitter auth - Supabase Key (first 10):", (supabase as any).supabaseKey?.substring(0, 10) + '...');
-      console.log("🐦 Twitter auth - Current URL:", window.location.href);
-      console.log("🐦 Twitter auth - Current origin:", origin);
-      
       // Check if there's an existing session before starting new auth
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
@@ -46,11 +40,22 @@ const TwitterLoginButton = () => {
       }
       
       console.log("🐦 Twitter auth - Calling supabase.auth.signInWithOAuth");
+      
+      // Important: Clear any hash fragments or auth params from the current URL
+      // This ensures no conflicts with new auth attempt
+      if (window.history && window.history.replaceState && 
+         (window.location.hash || window.location.search.includes('error'))) {
+        console.log("🐦 Twitter auth - Clearing URL hash/params before new auth attempt");
+        window.history.replaceState(null, document.title, window.location.pathname);
+      }
+      
+      // Try sign in with different options for more reliability
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
           redirectTo: redirectTo,
           scopes: 'tweet.read users.read',
+          skipBrowserRedirect: false, // Force browser to handle redirect
         }
       });
       
@@ -64,15 +69,15 @@ const TwitterLoginButton = () => {
       console.log("🐦 Twitter auth - Provider URL:", data.url);
       console.log("🐦 Twitter auth - Should redirect now via Supabase Auth");
       
-      // If we get here, we should be redirecting to Twitter
-      // But let's add a timeout just in case something goes wrong
-      setTimeout(() => {
-        // If we're still here after 5 seconds, something went wrong
-        if (data.url) {
-          console.log("🐦 Manual redirect to provider URL after timeout");
+      // Supabase should handle the redirect automatically
+      // But we'll add a backup for reliability
+      if (data.url) {
+        // Wait a moment to allow any supabase internal redirects to happen first
+        setTimeout(() => {
+          console.log("🐦 Manual redirect to provider URL after 2 second delay");
           window.location.href = data.url;
-        }
-      }, 5000);
+        }, 2000);
+      }
       
     } catch (error: any) {
       console.error("🐦 Twitter auth error:", error);

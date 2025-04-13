@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, debugHashParams } from "@/integrations/supabase/client";
+import { supabase, debugHashParams, processAuthHashParams } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useAuthRedirect = () => {
@@ -38,103 +38,41 @@ export const useAuthRedirect = () => {
     }
   }, [user, navigate, isLoading]);
 
-  // Add more aggressive hash parameter checking
+  // Process auth hash parameters aggressively
   useEffect(() => {
-    const checkHashParamsAggressively = async () => {
-      console.log("📱 Index - Aggressively checking for hash parameters...");
-      console.log("📱 Current location:", window.location.href);
-      console.log("📱 Current hash:", window.location.hash);
+    const processHashParams = async () => {
+      console.log("📱 Index - Processing hash parameters");
+      console.log("📱 Current URL:", window.location.href);
       
-      // Custom debug function to parse hash directly
-      debugHashParams();
-      
-      // Check if URL contains an access token hash parameter (#access_token=...)
+      // Check if URL contains an access token hash parameter
       if (window.location.hash && window.location.hash.includes('access_token')) {
-        console.log("🎯 ACCESS TOKEN DETECTED IN URL HASH:", window.location.hash);
+        console.log("🎯 ACCESS TOKEN DETECTED IN URL HASH");
         
         try {
-          console.log("🎯 Beginning Supabase processing of auth hash");
-          console.log("🎯 Auth configuration:", {
-            persistSession: true, 
-            detectSessionInUrl: true,
-            flowType: 'pkce'
-          });
+          // Use our improved hash processing function
+          const result = await processAuthHashParams();
           
-          // Process the hash - this should update the session
-          const { data, error } = await supabase.auth.getSession();
+          console.log("🎯 Hash processing result:", result);
           
-          console.log("🎯 Get session after hash detection - Success:", !!data.session);
-          console.log("🎯 Get session after hash detection - Error:", error);
-          console.log("🎯 Get session after hash detection - User ID:", data.session?.user?.id);
-          
-          if (error) {
-            console.error("🎯 Error processing auth hash:", error);
-            toast({
-              title: "Authentication Error",
-              description: error.message || "There was a problem processing your login.",
-              variant: "destructive",
-            });
-            navigate('/auth-status');
-            return;
-          }
-          
-          // If session is established, redirect to dashboard
-          if (data.session && data.session.user) {
-            console.log("🎯 Session established with user ID:", data.session.user.id);
-            console.log("🎯 Redirecting to dashboard...");
+          if (result.success && result.session) {
+            console.log("🎯 Successfully established session, redirecting to dashboard");
             
             // Clear hash from URL to prevent re-processing
             if (window.history && window.history.replaceState) {
-              window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+              window.history.replaceState(null, document.title, window.location.pathname);
             }
             
-            navigate('/dashboard');
+            // Give a moment for state to update before redirect
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 300);
             return;
           }
           
-          // If session not established but hash exists, try explicit exchange
-          console.log("🎯 No session after automatic processing, trying manual approach");
-          
-          // Try to manually extract the token and exchange it
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          const accessToken = hashParams.get('access_token');
-          
-          if (accessToken) {
-            console.log("🎯 Manually extracted access token, attempting to set session");
-            
-            // Attempt to manually set the session with the token
-            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: hashParams.get('refresh_token') || ''
-            });
-            
-            console.log("🎯 Manual setSession result:", { 
-              success: !!sessionData.session,
-              error: sessionError,
-              userId: sessionData.session?.user?.id
-            });
-            
-            if (sessionData.session) {
-              console.log("🎯 Manual session established, redirecting to dashboard");
-              navigate('/dashboard');
-              return;
-            }
-            
-            if (sessionError) {
-              console.error("🎯 Error manually setting session:", sessionError);
-              toast({
-                title: "Session Error",
-                description: sessionError.message || "Could not establish your session.",
-                variant: "destructive",
-              });
-            }
-          }
-          
-          // If all attempts fail, go to auth status page
-          console.log("🎯 All session establishment attempts failed, redirecting to auth status");
+          // If processing failed, go to auth status page
+          console.log("🎯 Failed to establish session from hash, going to auth status");
           navigate('/auth-status');
-          
-        } catch (err: any) {
+        } catch (err) {
           console.error("🎯 Exception during auth hash processing:", err);
           toast({
             title: "Authentication Error",
@@ -142,29 +80,40 @@ export const useAuthRedirect = () => {
             variant: "destructive",
           });
           
-          // Navigate to auth status page for detailed diagnostics
           navigate('/auth-status');
         }
       }
     };
     
-    checkHashParamsAggressively();
+    // Process hash params with a slight delay to ensure everything is loaded
+    setTimeout(processHashParams, 200);
   }, [toast, navigate]);
 
-  // Check session on component mount with enhanced logging
+  // Enhanced session check on component mount
   useEffect(() => {
     const checkSessionAndLog = async () => {
       console.log("📱 Index - Checking session status on mount");
-      const result = await supabase.auth.getSession();
-      console.log("📱 Index - Initial session check result:", result);
+      const { data, error } = await supabase.auth.getSession();
+      console.log("📱 Index - Initial session check result:", {
+        hasSession: !!data.session,
+        userId: data.session?.user?.id,
+        error: error?.message
+      });
       
-      if (result.data.session) {
-        console.log("📱 Index - Session found on mount, user ID:", result.data.session.user.id);
+      if (data.session) {
+        console.log("📱 Index - Session found on mount, user ID:", data.session.user.id);
+        navigate('/dashboard');
       } else {
         console.log("📱 Index - No session found on mount");
+        
+        // If we have hash parameters but no session, try to process them
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          debugHashParams();
+          processAuthHashParams();
+        }
       }
     };
     
     checkSessionAndLog();
-  }, []);
+  }, [navigate]);
 };

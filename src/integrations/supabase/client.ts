@@ -10,9 +10,7 @@ console.log('✅ SUPABASE INITIALIZATION - URL:', SUPABASE_URL);
 console.log('✅ SUPABASE INITIALIZATION - KEY (first 10 chars):', SUPABASE_PUBLISHABLE_KEY.substring(0, 10) + '...');
 console.log('✅ SUPABASE INITIALIZATION - KEY (last 10 chars):', '...' + SUPABASE_PUBLISHABLE_KEY.substring(SUPABASE_PUBLISHABLE_KEY.length - 10));
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
+// Create the Supabase client with optimized configuration
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY, 
@@ -24,7 +22,15 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true,
       flowType: 'pkce',  // Use PKCE for more secure auth flow
       debug: true, // Enable debug mode for auth
-    }
+      // Don't store sensitive data in cookies to avoid issues
+      storageKey: 'sb-fufkgbehjidcoytcrdlo-auth-token',
+    },
+    global: {
+      headers: {
+        // Add custom headers to help with troubleshooting
+        'x-client-info': 'lovable-app',
+      },
+    },
   }
 );
 
@@ -35,6 +41,10 @@ supabase.auth.onAuthStateChange((event, session) => {
   console.log("🔍 ONAUTHSTATECHANGE FIRED! Event:", event);
   console.log("🔍 SESSION OBJECT:", session ? "SESSION EXISTS" : "SESSION IS NULL");
   
+  // Add timestamp to help with debugging timeline
+  console.log("🔍 TIMESTAMP:", new Date().toISOString());
+  console.log("🔍 CURRENT URL:", window.location.href);
+  
   if (session) {
     console.log("🔍 USER ID:", session.user?.id);
     console.log("🔍 ACCESS TOKEN (first 20 chars):", session.access_token ? (session.access_token.substring(0, 20) + '...') : 'MISSING');
@@ -44,14 +54,18 @@ supabase.auth.onAuthStateChange((event, session) => {
     console.log("🔍 User metadata:", session.user?.user_metadata);
     console.log("🔍 App metadata:", session.user?.app_metadata);
     
-    // Force browser navigation to dashboard on successful login
+    // Force browser navigation to dashboard on successful login, but add delay
+    // to ensure everything is properly initialized
     if (event === 'SIGNED_IN') {
       const currentPath = window.location.pathname;
       console.log("🔍 Current path after SIGNED_IN event:", currentPath);
       
       if (currentPath !== '/dashboard' && currentPath !== '/auth-debug' && currentPath !== '/auth-status') {
         console.log("🔍 Redirecting to dashboard after SIGNED_IN event");
-        window.location.href = '/dashboard';
+        // Use a slight delay to ensure auth state is fully processed
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 300);
       } else if (currentPath === '/auth-debug' || currentPath === '/auth-status') {
         console.log("🔍 On debug page, not redirecting automatically");
       }
@@ -62,6 +76,12 @@ supabase.auth.onAuthStateChange((event, session) => {
     console.log("🔍 Current path:", window.location.pathname);
     console.log("🔍 Has hash:", !!window.location.hash);
     console.log("🔍 Has search params:", !!window.location.search);
+    
+    // Check for hash parameters that might indicate auth errors
+    if (window.location.hash || window.location.search.includes('error')) {
+      console.log("🔍 URL contains hash or error params, might be auth-related");
+      debugHashParams();
+    }
   }
 });
 
@@ -69,6 +89,7 @@ supabase.auth.onAuthStateChange((event, session) => {
 supabase.auth.getSession().then(({ data, error }) => {
   console.log("✅ Initial Session Check - Session exists:", !!data.session);
   console.log("✅ Initial Session Check - User ID:", data.session?.user?.id);
+  console.log("✅ Initial Session Check - Timestamp:", new Date().toISOString());
   
   if (error) {
     console.error("⚠️ Initial session error:", error);
@@ -90,6 +111,7 @@ window.fetch = function(input, init) {
     console.log('🌐 NETWORK: Supabase auth request detected:', url);
     console.log('🌐 NETWORK: Request headers:', init?.headers);
     console.log('🌐 NETWORK: Request method:', init?.method);
+    console.log('🌐 NETWORK: Timestamp:', new Date().toISOString());
     
     if (init?.body) {
       try {
@@ -135,7 +157,8 @@ export const checkCurrentSession = async () => {
       hasSession: !!data.session, 
       error, 
       userId: data.session?.user?.id,
-      provider: data.session?.user?.app_metadata?.provider
+      provider: data.session?.user?.app_metadata?.provider,
+      timestamp: new Date().toISOString()
     });
     return { session: data.session, error };
   } catch (e) {
@@ -158,6 +181,12 @@ export const debugHashParams = () => {
       console.log("🧪 Access token first 10 chars:", token?.substring(0, 10) + "...");
     }
     
+    // Check for error params
+    if (hashParams.has("error")) {
+      console.log("🧪 Error in hash:", hashParams.get("error"));
+      console.log("🧪 Error description:", hashParams.get("error_description"));
+    }
+    
     // Log all hash parameters
     hashParams.forEach((value, key) => {
       console.log(`🧪 Hash parameter ${key}: ${key.includes('token') ? value.substring(0, 10) + '...' : value}`);
@@ -171,14 +200,87 @@ export const debugHashParams = () => {
   if (search) {
     console.log("🧪 URL SEARCH DETECTED:", search);
     const searchParams = new URLSearchParams(search);
+    
+    // Check for error params
+    if (searchParams.has("error")) {
+      console.log("🧪 Error in search params:", searchParams.get("error"));
+      console.log("🧪 Error description:", searchParams.get("error_description"));
+    }
+    
     searchParams.forEach((value, key) => {
       console.log(`🧪 Search parameter ${key}: ${value}`);
     });
   }
 };
 
+// Improved version of hash processing for auth callbacks
+export const processAuthHashParams = async () => {
+  console.log("🔐 Processing auth hash parameters...");
+  
+  // Check if URL contains auth-related parameters
+  if (window.location.hash && window.location.hash.includes('access_token')) {
+    console.log("🔐 Access token detected in URL hash");
+    
+    // Log hash details
+    debugHashParams();
+    
+    try {
+      // First let Supabase try to automatically process the hash
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("🔐 Error getting session after hash detected:", error);
+        return { success: false, error };
+      }
+      
+      if (data.session) {
+        console.log("🔐 Session established automatically:", data.session.user.id);
+        return { success: true, session: data.session };
+      }
+      
+      // If automatic processing failed, try manual extraction
+      console.log("🔐 No session after automatic processing, trying manual extraction");
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      if (accessToken) {
+        console.log("🔐 Manually extracted access token, length:", accessToken.length);
+        
+        // Try to manually set the session
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
+        });
+        
+        if (sessionError) {
+          console.error("🔐 Error manually setting session:", sessionError);
+          return { success: false, error: sessionError };
+        }
+        
+        if (sessionData.session) {
+          console.log("🔐 Session established manually:", sessionData.session.user.id);
+          return { success: true, session: sessionData.session };
+        }
+      }
+      
+      console.log("🔐 Failed to establish session from hash params");
+      return { success: false, error: new Error("Failed to establish session from hash params") };
+    } catch (e) {
+      console.error("🔐 Exception processing auth hash:", e);
+      return { success: false, error: e };
+    }
+  }
+  
+  console.log("🔐 No auth hash parameters detected");
+  return { success: false, noHashDetected: true };
+};
+
 // Run hash param check on load
 debugHashParams();
+
+// Also try to process auth hash immediately
+processAuthHashParams();
 
 // Export URL and key for debugging
 export const SUPABASE_CONFIG = {
